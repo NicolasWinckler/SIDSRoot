@@ -15,7 +15,14 @@ EsrInjData::EsrInjData() : TNamed(),
         fFrequencyOffset(0.),
         fUserName(),
         fFileComment(),
-        fQualityTag()
+        fQualityTag(),
+        fNp_init(0),
+        fNp_end(0),
+        fNd_init(0),
+        fNd_end(0),
+        fNEC(0),
+        fCoolFreqP(0.),
+        fCoolFreqD(0.)
 {
     
 }
@@ -30,7 +37,14 @@ EsrInjData::EsrInjData(TString Name, TString Title, std::string FileName,
         fFrequencyOffset(FrequencyOffset),
         fUserName(),
         fFileComment(),
-        fQualityTag()
+        fQualityTag(),
+        fNp_init(0),
+        fNp_end(0),
+        fNd_init(0),
+        fNd_end(0),
+        fNEC(0),
+        fCoolFreqP(0.),
+        fCoolFreqD(0.)
 {
     
 }
@@ -47,7 +61,14 @@ EsrInjData::EsrInjData(std::string FileName, int DataType,
         fFrequencyOffset(FrequencyOffset),
         fUserName(),
         fFileComment(),
-        fQualityTag()
+        fQualityTag(),
+        fNp_init(0),
+        fNp_end(0),
+        fNd_init(0),
+        fNd_end(0),
+        fNEC(0),
+        fCoolFreqP(0.),
+        fCoolFreqD(0.)
 {
     
 }
