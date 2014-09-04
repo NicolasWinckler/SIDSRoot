@@ -65,8 +65,8 @@ public:
     void SetFileComment(std::string FileComment){fFileComment=FileComment;}
     std::string GetFileComment() const {return fFileComment;}
     
-    void SetQualityTag(std::string QualityTag){fQualityTag=QualityTag;}
-    std::string GetQualityTag() const {return fQualityTag;}
+    void SetQualityTag(int QualityTag){fQualityTag=QualityTag;}
+    int GetQualityTag() const {return fQualityTag;}
     
     
     
@@ -136,7 +136,7 @@ protected:
     
     std::string fUserName;
     std::string fFileComment;
-    std::string fQualityTag;
+    int fQualityTag;
     
     int fNp_init;
     int fNp_end;
