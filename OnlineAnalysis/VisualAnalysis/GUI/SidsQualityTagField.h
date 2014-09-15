@@ -58,7 +58,7 @@ protected:
    int fQualityTag;
    string fComment;
    
-   ClassDef(SidsQualityTagField, 1);
+   ClassDef(SidsQualityTagField, 0);
 };
 
 
