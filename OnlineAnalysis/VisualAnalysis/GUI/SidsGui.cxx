@@ -196,8 +196,9 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    
    /// QUALITY BUTTON
    
-   fFileQualityTag = new TGNumberEntry(fControlFrame,0,6,666,TGNumberFormat::kNESInteger);
-   fControlFrame->AddFrame(fFileQualityTag, new TGLayoutHints( kLHintsExpandX,2,2,2,5));
+   fFileQualityTag = new SidsQualityTagField(fControlFrame,"Tag and comment");
+   
+   fControlFrame->AddFrame(fFileQualityTag, new TGLayoutHints( kLHintsExpandX,2,2,5,5));
    
    
    //TGLabel* QualityLabel = new TGLabel(fControlFrame, "Quality Tag");

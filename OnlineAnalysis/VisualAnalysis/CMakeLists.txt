@@ -50,6 +50,7 @@ Set(SRCS
     SubTask/EsrTree.cxx
     GUI/SidsGui.cxx
     GUI/SidsDecayTxtField.cxx
+    GUI/SidsQualityTagField.cxx
 )
 
 If (Boost_FOUND)

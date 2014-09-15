@@ -16,6 +16,7 @@
 #pragma link C++ class EsrDecayEvent+;
 #pragma link C++ class EsrInjData;
 #pragma link C++ class SidsDecayTxtField+;
+#pragma link C++ class SidsQualityTagField+;
 #pragma link C++ class SidsGui+;
 #pragma link C++ class EsrTree+;
 

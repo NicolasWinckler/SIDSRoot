@@ -38,7 +38,7 @@
 #include "TFile.h"
 #include "TClass.h"
 #include "TKey.h"
-#include "SidsDecayTxtField.h"
+
 #include "TGStatusBar.h"
 #include "TVirtualPadEditor.h"
 #include <TGClient.h>
@@ -78,6 +78,9 @@
 
 #include "EsrInjData.h"
 
+#include "SidsQualityTagField.h"
+#include "SidsDecayTxtField.h"
+
 
 enum EMyMessageTypes {
    M_FILE_OPEN,
@@ -98,7 +101,7 @@ protected:
    TRootEmbeddedCanvas  *fEc2;          // embedded canvas
    TGTextButton         *fButtonExit;  // "Exit" text button
    TGTextButton         *fButtonValidate;    // "Validate" text button
-   TGNumberEntry        *fFileQualityTag;
+   SidsQualityTagField  *fFileQualityTag;
    TGMenuBar            *fMenuBar;     // main menu bar
    TGPopupMenu          *fMenuFile;    // "File" popup menu entry
    TGPopupMenu          *fMenuHelp;    // "Help" popup menu entry
