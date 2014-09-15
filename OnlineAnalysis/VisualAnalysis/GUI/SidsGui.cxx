@@ -50,8 +50,9 @@ static Atom_t gRootObj  = kNone;
 
 //______________________________________________________________________________
 SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::string Filename) :
-   TGMainFrame(p, w, h), fEc(NULL), fEc2(NULL), fButtonExit(NULL),
-        fButtonValidate(NULL), fMenuBar(NULL), fMenuFile(NULL),
+   TGMainFrame(p, w, h), fEc(NULL), fEc2(NULL), fButtonExit(NULL), 
+        fButtonValidate(NULL), fFileQualityTag(NULL),
+        fMenuBar(NULL), fMenuFile(NULL),
         fMenuHelp(NULL), fCanvas1(NULL), fCanvas2(NULL), fListTree(NULL),
         fBaseLTI(NULL), fStatus(NULL), fStatusBar(NULL), 
         fGraph(NULL), fHist1D(NULL), fHist2D(NULL), fControlFrame(NULL),
@@ -192,16 +193,34 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    hfrm->AddFrame(fEc2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
    
    fControlFrame = new TGVerticalFrame(hfrm, 200, 400);
+   
+   /// QUALITY BUTTON
+   
+   fFileQualityTag = new TGNumberEntry(fControlFrame,0,6,666,TGNumberFormat::kNESInteger);
+   fControlFrame->AddFrame(fFileQualityTag, new TGLayoutHints( kLHintsExpandX,2,2,2,5));
+   
+   
+   //TGLabel* QualityLabel = new TGLabel(fControlFrame, "Quality Tag");
+   
+   
+   /// DRAW BUTTON
    TGTextButton *draw = new TGTextButton(fControlFrame,"&Draw");
    draw->Connect("Clicked()","SidsGui",this,"DoDraw()");
    
    fControlFrame->AddFrame(draw, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
    
+   
+   
+   
+   /// ADD DECAY BUTTON
    TGTextButton *AddDecay = new TGTextButton(fControlFrame,"&Add EC-Decay");
    AddDecay->Connect("Clicked()","SidsGui",this,"AddDecay()");
    
    fControlFrame->AddFrame(AddDecay, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
    
+   
+   
+   /// REMOVE DECAY BUTTON
    TGTextButton *RemoveDecay = new TGTextButton(fControlFrame,"&Remove EC-Decay");
    RemoveDecay->Connect("Clicked()","SidsGui",this,"RemoveDecay()");
    

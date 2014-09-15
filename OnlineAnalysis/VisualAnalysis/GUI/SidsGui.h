@@ -98,6 +98,7 @@ protected:
    TRootEmbeddedCanvas  *fEc2;          // embedded canvas
    TGTextButton         *fButtonExit;  // "Exit" text button
    TGTextButton         *fButtonValidate;    // "Validate" text button
+   TGNumberEntry        *fFileQualityTag;
    TGMenuBar            *fMenuBar;     // main menu bar
    TGPopupMenu          *fMenuFile;    // "File" popup menu entry
    TGPopupMenu          *fMenuHelp;    // "Help" popup menu entry
