@@ -197,12 +197,14 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    /// QUALITY BUTTON
    
    fFileQualityTag = new SidsQualityTagField(fControlFrame,"Tag and comment");
-   
+   fFileQualityTag->GetTagEntry()->Connect("TextChanged(char*)", "SidsQualityTagField",
+                                   fFileQualityTag, "GetTagField(char*)");
+   fFileQualityTag->GetCommentEntry()->Connect("TextChanged(char*)", "SidsQualityTagField",
+                                   fFileQualityTag, "GetCommentField(char*)");
+
    fControlFrame->AddFrame(fFileQualityTag, new TGLayoutHints( kLHintsExpandX,2,2,5,5));
    
-   
-   //TGLabel* QualityLabel = new TGLabel(fControlFrame, "Quality Tag");
-   
+      
    
    /// DRAW BUTTON
    TGTextButton *draw = new TGTextButton(fControlFrame,"&Draw");
@@ -725,8 +727,13 @@ void SidsGui::DoValidate()
     //std::cout<<"Decay Time is : "       <<fDecayTime[0]<<std::endl;
     
     
+    //std::cout<<"Qualitytag is : "  << fFileQualityTag->GetTag() <<std::endl;
+    //std::cout<<"comment is : "       << fFileQualityTag->GetComment() <<std::endl;
+    
     EsrInjData DecayData(fFileName.Data(),SIDS::kRSA1,0.032,31.25);
     DecayData.SetUserName(fSamplerConfig.GetUserName());
+    DecayData.SetQualityTag(fFileQualityTag->GetTag());
+    DecayData.SetFileComment(fFileQualityTag->GetComment());
     
     for(unsigned int i(0);i<fDecayField.size();i++)
     {
