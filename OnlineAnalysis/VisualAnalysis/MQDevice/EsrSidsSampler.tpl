@@ -101,10 +101,27 @@ else cout << " running "  << endl;
     cout << "Sent everything in:\n" << boost::timer::format(elapsed_time, 2) << endl;
     cout << "Sent " << sentMsgs << " messages!" << endl;
 
-    rateLogger.interrupt();
-    rateLogger.join();
-    resetEventCounter.interrupt();
-    resetEventCounter.join();
+    try 
+    {
+        rateLogger.interrupt();
+        rateLogger.join();
+        // resetEventCounter.interrupt();
+        // resetEventCounter.join();
+        // commandListener.interrupt();
+        // commandListener.join();
+    }
+    catch (boost::thread_resource_error &e) 
+    {
+        LOG(ERROR) << e.what();
+    }
+    
+    FairMQDevice::Shutdown();
+    
+    boost::lock_guard<boost::mutex> lock(fRunningMutex);
+    fRunningFinished = true;
+    fRunningCondition.notify_one();
+    
+    
 }
 
 
