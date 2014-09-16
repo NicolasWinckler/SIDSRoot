@@ -956,7 +956,6 @@ void SidsGui::StartSampler()
 #ifndef __CINT__
 typedef boost::archive::binary_oarchive TBoostBinPayloadOut; // boost binary format
 typedef EsrSamplerTask<TBoostBinPayloadOut> TLoader;
-/*
 static void s_signal_handler(int signal, EsrSidsSampler<TLoader> sampler)
 {
     cout << endl << "Caught signal " << signal << endl;
@@ -977,7 +976,7 @@ static void s_catch_signals(void)
     sigaction(SIGINT, &action, NULL);
     sigaction(SIGTERM, &action, NULL);
 }
-*/
+
 #endif //__CINT__
 
 
