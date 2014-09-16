@@ -115,13 +115,13 @@ else cout << " running "  << endl;
         LOG(ERROR) << e.what();
     }
     
-    FairMQDevice::Shutdown();
-    
+    //FairMQDevice::Shutdown();
+    /*
     boost::lock_guard<boost::mutex> lock(fRunningMutex);
     fRunningFinished = true;
     fRunningCondition.notify_one();
     
-    
+    */
 }
 
 

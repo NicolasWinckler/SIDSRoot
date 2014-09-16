@@ -168,11 +168,12 @@ private:
    ClassDef(SidsGui, 0); // Mainframe for Drag and Drop demo
 };
 
-
+/*
 #ifndef __CINT__
 static void s_signal_handler(int signal);
 static void s_catch_signals(void);
 #endif //__CINT__
+*/
 
 #endif	/* SIDSGUI_H */
 

@@ -934,11 +934,11 @@ void SidsGui::StartSampler()
     
     //sampler.ChangeState(EsrSidsSampler<TLoader>::RUN);
 
-    boost::unique_lock<boost::mutex> lock(sampler.fRunningMutex);
+    /*boost::unique_lock<boost::mutex> lock(sampler.fRunningMutex);
     while (!sampler.fRunningFinished)
     {
         sampler.fRunningCondition.wait(lock);
-    }
+    }*/
     
     //*
     try
@@ -959,9 +959,10 @@ void SidsGui::StartSampler()
 }
 
 #ifndef __CINT__
+/*
 typedef boost::archive::binary_oarchive TBoostBinPayloadOut; // boost binary format
 typedef EsrSamplerTask<TBoostBinPayloadOut> TLoader;
-//*
+
 static void s_signal_handler(int signal, EsrSidsSampler<TLoader> sampler)
 {
     cout << endl << "Caught signal " << signal << endl;
