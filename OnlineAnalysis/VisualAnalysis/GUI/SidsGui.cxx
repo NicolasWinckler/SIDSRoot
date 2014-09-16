@@ -57,7 +57,9 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
         fBaseLTI(NULL), fStatus(NULL), fStatusBar(NULL), 
         fGraph(NULL), fHist1D(NULL), fHist2D(NULL), fControlFrame(NULL),
         fSidsHisto(NULL), fFileName(Filename.c_str()), fFileInfo(), 
-        fDecayData() ,fDecayCounter(0),fHisto1DCounter(0), fReadyToSend(false), fSampler(false),
+        fDecayData() ,fDecayCounter(0), 
+        fHisto1DCounter(0), fHisto2DCounter(0),fHeaderCounter(0),
+        fReadyToSend(false), fSampler(false),
         fSamplerConfig(SamplerConfig)
 
 {
@@ -275,7 +277,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
 
     fFileName=fSamplerConfig.GetInputFile().c_str();
     TFile* rootfile0 = new TFile(fFileName);
-    SeekHisto(rootfile0);
+    RootFileManager(rootfile0);
    //////////////////////////////////////////////////////
    
    SetWindowName("Single Ion Decay Spectroscopy Analysis");
@@ -293,14 +295,35 @@ SidsGui::~SidsGui()
     //TVirtualPadEditor::Terminate();
     //SafeDelete(fEditor);
     for(unsigned int i(0);i<f1DHisto.size() ; i++)
-   {
-       if(f1DHisto[i])
-       {
-            delete f1DHisto[i];
-            f1DHisto[i]=NULL;
-       }
-   }
-   f1DHisto.clear();
+    {
+        if(f1DHisto[i])
+        {
+             delete f1DHisto[i];
+             f1DHisto[i]=NULL;
+        }
+    }
+    f1DHisto.clear();
+   
+   for(unsigned int i(0);i<f2DHisto.size() ; i++)
+    {
+        if(f2DHisto[i])
+        {
+             delete f2DHisto[i];
+             f2DHisto[i]=NULL;
+        }
+    }
+    f2DHisto.clear();
+   
+   for(unsigned int i(0);i<fHeaders.size() ; i++)
+    {
+        if(fHeaders[i])
+        {
+             delete fHeaders[i];
+             fHeaders[i]=NULL;
+        }
+    }
+    fHeaders.clear();
+   
 }
 
 //______________________________________________________________________________
@@ -449,9 +472,142 @@ void SidsGui::OpenRootFile()//TGFileInfo fileInfo)
     
     TFile* rootfile = new TFile(fFileName);
     
-    SeekHisto(rootfile);
+    RootFileManager(rootfile);
     //h_iqt_spectrum
     //TH2D* fRooData= (TH2D*) rootfile->Get(DataName.c_str());
+}
+
+
+
+
+
+
+
+/*
+#include "TFile.h"
+#include "TKey.h"
+#include "TMacro.h"
+   
+Int_t nlines = 0;
+Int_t nfiles = 0;
+Int_t ndirs = 0;
+Int_t nh = 0;
+Int_t nc = 0;
+Int_t nC = 0;
+Int_t npy = 0;
+*/
+void SidsGui::ReadDir(TDirectory *dir) 
+{
+   //ndirs++;
+   TDirectory *dirsav = gDirectory;
+   TIter next(dir->GetListOfKeys());
+   TKey *key;
+   while ((key = (TKey*)next())) 
+   {
+      if (key->IsFolder()) 
+      {
+         dir->cd(key->GetName());
+         TDirectory *subdir = gDirectory;
+         ReadDir(subdir);
+         dirsav->cd();
+         continue;
+      }
+      else
+          SeekObject(key);
+      /*
+      TMacro *macro = (TMacro*)key->ReadObj();
+      nfiles++;
+      nlines += macro->GetListOfLines()->GetEntries();
+      if (strstr(key->GetName(),".h"))   nh++;
+      if (strstr(key->GetName(),".c"))   nc++;
+      if (strstr(key->GetName(),".C"))   nC++;
+      if (strstr(key->GetName(),".py"))  npy++;
+      delete macro;
+      */
+   }
+}
+
+
+void SidsGui::SeekObject(TKey *key)
+{
+    TObject* obj ;
+    const TGPicture *pic = 0;
+    TGListTreeItem *item;
+    //TH1F *h = (TH1F*)gDirectory->Get("myHist");
+    obj = key->ReadObj();
+    if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
+            && (!obj->InheritsFrom("TH2"))
+            && (!obj->InheritsFrom("TH1"))  
+            && (!obj->InheritsFrom("Header"))
+            ) 
+    {
+        printf("<W> Object %s is not 1D or 2D histogram : "
+           "will not be converted\n",obj->GetName()) ;
+    }
+    printf("Histo name:%s title:%s\n",obj->GetName(),obj->GetTitle());
+
+    
+    
+    /// SEARCH FOR TH1D
+    if(obj->InheritsFrom("TH1D"))
+    {
+        TH1D* histo1D=NULL;
+        histo1D=(TH1D*)gDirectory->Get(obj->GetName());
+
+        if(histo1D) 
+        {
+            f1DHisto.push_back(new TH1D(*histo1D));
+            pic = gClient->GetPicture("h1_t.xpm");
+            item = fListTree->AddItem(fBaseLTI, f1DHisto[fHisto1DCounter]->GetName(), f1DHisto[fHisto1DCounter], pic, pic);
+            fListTree->SetToolTipItem(item, "1D Histogram");
+            item->SetDNDSource(kTRUE);
+            fHisto1DCounter++;
+        }
+    }
+    
+    /// SEARCH FOR TH2D
+    if(obj->InheritsFrom("TH2D"))
+    {
+        
+        TH2D* histo2D=NULL;
+        histo2D=(TH2D*)gDirectory->Get(obj->GetName());
+        
+        fSidsHisto=(TH2D*)gDirectory->Get(obj->GetName());
+        
+        if(histo2D) 
+        {
+            f2DHisto.push_back(new TH2D(*histo2D));
+            pic = gClient->GetPicture("h2_t.xpm");
+            item = fListTree->AddItem(fBaseLTI, f2DHisto[fHisto2DCounter]->GetName(), f2DHisto[fHisto2DCounter], pic, pic);
+            fListTree->SetToolTipItem(item, "2D Histogram");
+            item->SetDNDSource(kTRUE);
+            fHisto2DCounter++;
+        }
+        
+        //pic = gClient->GetPicture("h2_t.xpm");
+        //item = fListTree->AddItem(fBaseLTI, fSidsHisto->GetName(), fSidsHisto, pic, pic);
+        //fListTree->SetToolTipItem(item, "2D Histogram");
+        //item->SetDNDSource(kTRUE);
+        
+    }
+    
+    /// SEARCH FOR HEADERS
+    if(obj->InheritsFrom("Header"))
+    {
+        Header* RsaHeader=NULL;
+        RsaHeader=(Header*)gDirectory->Get(obj->GetName());
+        //std::cout<<"Header name = "<<obj->GetName()<<std::endl;
+        
+        
+        
+        RsaHeader->Show();
+        if(RsaHeader)
+        {
+            fHeaders.push_back(new Header(*RsaHeader));
+            fHeaderCounter++;
+        }
+    }
+    
 }
 
 
@@ -508,7 +664,7 @@ void SidsGui::ResetStatus()
 }
 
 
-int SidsGui::SeekHisto(TFile* rootfile)
+int SidsGui::RootFileManager(TFile* rootfile)
 {
 
     if (!rootfile->IsOpen()) 
@@ -525,56 +681,9 @@ int SidsGui::SeekHisto(TFile* rootfile)
     }
     
     fBaseLTI = fListTree->AddItem(0, (boost::filesystem::basename(fFileName.Data())).c_str());
-    TIter next(list) ;
-    TKey* key ;
-    TObject* obj ;
-
-    const TGPicture *pic = 0;
-    TGListTreeItem *item;
     
-    while ( key = (TKey*)next() ) 
-    {
-        obj = key->ReadObj();
-        if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
-                && (!obj->InheritsFrom("TH2"))
-                && (!obj->InheritsFrom("TH1"))  ) 
-        {
-            printf("<W> Object %s is not 1D or 2D histogram : "
-               "will not be converted\n",obj->GetName()) ;
-        }
-        printf("Histo name:%s title:%s\n",obj->GetName(),obj->GetTitle());
-        
-        //TH2 *h2 = (TH2F *)GetObject("2D Hist");
-        if(obj->InheritsFrom("TH2D"))
-        {
-            //TH2D* th2obj;
-            
-            rootfile->GetObject(obj->GetName(),fSidsHisto);
-            pic = gClient->GetPicture("h2_t.xpm");
-            item = fListTree->AddItem(fBaseLTI, fSidsHisto->GetName(), fSidsHisto, pic, pic);
-            fListTree->SetToolTipItem(item, "2D Histogram");
-            item->SetDNDSource(kTRUE);
-        }
-        if(obj->InheritsFrom("TH1D"))
-        {
-            //TH2D* th2obj;
-            TH1D* histo1D=NULL;
-            rootfile->GetObject(obj->GetName(),histo1D);
-            
-            if(histo1D) 
-            {
-                f1DHisto.push_back(new TH1D(*histo1D));
-                pic = gClient->GetPicture("h1_t.xpm");
-                item = fListTree->AddItem(fBaseLTI, f1DHisto[fHisto1DCounter]->GetName(), f1DHisto[fHisto1DCounter], pic, pic);
-                fListTree->SetToolTipItem(item, "1D Histogram");
-                item->SetDNDSource(kTRUE);
-                fHisto1DCounter++;
-            }
-        }
-        
-        
-    }
-    
+    TDirectory *CurrentDir=gDirectory;
+    ReadDir(CurrentDir);
     return 1;
 }
 

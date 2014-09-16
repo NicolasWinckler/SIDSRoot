@@ -21,6 +21,7 @@ ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/MQTask
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/SubTask
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/MQDevice
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/GUI
+${SIDS_SOURCE_DIR}/time2root
 )
 
 include_directories(${INCLUDE_DIRECTORIES})
@@ -51,6 +52,7 @@ Set(SRCS
     GUI/SidsGui.cxx
     GUI/SidsDecayTxtField.cxx
     GUI/SidsQualityTagField.cxx
+    ${SIDS_SOURCE_DIR}/time2root/header.cxx
 )
 
 If (Boost_FOUND)

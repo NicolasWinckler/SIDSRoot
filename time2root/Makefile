@@ -4,12 +4,15 @@ CINT = rootcint
 
 OS_NAME:=$(shell uname -s | tr A-Z a-z)
 ifeq ($(OS_NAME),darwin)
-STDINCDIR := -I/opt/local/include
-STDLIBDIR := -L/opt/local/lib
+STDINCDIR := -I/Users/winckler/fair/soft/mar14/include
+STDLIBDIR := -L/Users/winckler/fair/soft/mar14/lib
 else
 STDINCDIR := 
 STDLIBDIR := 
 endif
+
+
+
 
 CPPFLAGS := $(shell root-config --cflags) $(STDINCDIR)
 LDFLAGS := $(shell root-config --glibs) $(STDLIBDIR)

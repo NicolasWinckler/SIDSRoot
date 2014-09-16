@@ -80,7 +80,7 @@
 
 #include "SidsQualityTagField.h"
 #include "SidsDecayTxtField.h"
-
+#include "header.h"
 
 enum EMyMessageTypes {
    M_FILE_OPEN,
@@ -126,10 +126,12 @@ protected:
    std::vector<SidsDecayTxtField*> fDecayField;
    
    std::vector<TH1D*> f1DHisto;
+   std::vector<TH2D*> f2DHisto;
+   std::vector<Header*> fHeaders;
    
    
-   
-   int SeekHisto(TFile* rootfile);
+   int RootFileManager(TFile* rootfile);
+   void SeekObject(TKey *key);
    
 public:
    SidsGui(const TGWindow *p, int w, int h, MQconfig SamplerConfig, std::string Filename="");
@@ -154,10 +156,12 @@ public:
    void SetSampler(bool active=false){fSampler=active;}
    
 void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
-
+void ReadDir(TDirectory *dir);
 private:
     int fDecayCounter;
     int fHisto1DCounter;
+    int fHisto2DCounter;
+    int fHeaderCounter;
     bool fReadyToSend;
     bool fSampler;
     MQconfig fSamplerConfig;
