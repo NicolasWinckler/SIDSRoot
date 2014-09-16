@@ -76,11 +76,13 @@ GENERATE_LIBRARY()
 
 If (Boost_FOUND)
   Set(Exe_Names
+    RunTest
     EsrMQSamplerBoost
     EsrMQFileSinkBoost
   )
 
   set(Exe_Source
+    run/runtest.cxx
     run/runEsrSampler.cxx
     run/runEsrFileSink.cxx
     )
