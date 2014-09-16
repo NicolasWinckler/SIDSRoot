@@ -19,7 +19,7 @@
 #pragma link C++ class SidsQualityTagField+;
 #pragma link C++ class SidsGui+;
 #pragma link C++ class EsrTree+;
-#pragma link C++ class Header+;
+#pragma link C++ class Header;
 
 #endif
 
