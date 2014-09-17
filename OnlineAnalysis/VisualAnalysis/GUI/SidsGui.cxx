@@ -139,6 +139,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    
    
    fEc2 = new TRootEmbeddedCanvas ("AnalysisCanvas",hfrm,600,400);
+   fEc2->SetDNDTarget(kTRUE);
    //fEc2->GetCanvas()->EditorBar();
    TVirtualPadEditor::ShowEditor();
    fCanvas2 = fEc2->GetCanvas();
@@ -615,6 +616,8 @@ void SidsGui::DataDropped(TGListTreeItem *, TDNDData *data)
    }
    TTimer::SingleShot(3000, "SidsGui", this, "ResetStatus()");
    fCanvas1->Update();
+   fCanvas2->cd();
+   fCanvas2->Update();
 }
 
 //______________________________________________________________________________
@@ -640,13 +643,13 @@ void SidsGui::DoDraw()
                     delete fHisto_px;
                     fHisto_px=NULL;
                 }
-                //fHisto_px=f2DHisto[i]->ProjectionX();
-                //Int_t binMax=fHisto_px->GetMaximumBin();
-                Int_t binMax=f2DHisto[i]->ProjectionX()->GetMaximumBin();
+                fHisto_px=f2DHisto[i]->ProjectionX();
+                Int_t binMax=fHisto_px->GetMaximumBin();
+                //Int_t binMax=f2DHisto[i]->ProjectionX()->GetMaximumBin();
                 Double_t Xmin=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax-175);
                 Double_t Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax+175);
-                //std::cout<<"Xmin : "<< Xmin<<std::endl;
-                //std::cout<<"Xax : "<< Xmax<<std::endl;
+                std::cout<<"Xmin : "<< Xmin<<std::endl;
+                std::cout<<"Xax : "<< Xmax<<std::endl;
                 f2DHisto[i]->GetXaxis()->SetRangeUser(Xmin,Xmax);
                 
                 histoname+="_Rebinned";
@@ -669,10 +672,10 @@ void SidsGui::DoDraw()
     fCanvas2->cd();
     fCanvas2->Update();
     
-    //fCanvas1->cd();
-    //fHisto_px->Draw();
+    fCanvas1->cd();
+    fHisto_px->Draw();
     
-    //fCanvas1->Update();
+    fCanvas1->Update();
 }
 
 
@@ -736,19 +739,25 @@ void SidsGui::RemoveDecay()
 //______________________________________________________________________________
 void SidsGui::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
-   const char *text0, *text1, *text3;
-   char text2[50];
-   text0 = selected->GetTitle();
-   fStatusBar->SetText(text0,0);
-   text1 = selected->GetName();
-   fStatusBar->SetText(text1,1);
-   if (event == kKeyPress)
-      sprintf(text2, "%c", (char) px);
-   else
-      sprintf(text2, "%d,%d", px, py);
-   fStatusBar->SetText(text2,2);
-   text3 = selected->GetObjectInfo(px,py);
-   fStatusBar->SetText(text3,3);
+    const char *text0, *text1, *text3;
+    char text2[50];
+    if(selected->InheritsFrom("TH2"))
+    {
+         fCanvas2->cd();// to get rid of the fcanvas2 event info issue after DND
+         //fCanvas2->Update();
+    }
+    text0 = selected->GetTitle();
+    fStatusBar->SetText(text0,0);
+    text1 = selected->GetName();
+    fStatusBar->SetText(text1,1);
+    if (event == kKeyPress)
+       sprintf(text2, "%c", (char) px);
+    else
+       sprintf(text2, "%d,%d", px, py);
+    fStatusBar->SetText(text2,2);
+    text3 = selected->GetObjectInfo(px,py);
+    fStatusBar->SetText(text3,3);
+   
 }
 
 //______________________________________________________________________________
