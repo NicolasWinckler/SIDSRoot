@@ -16,7 +16,7 @@ public:
     
     
     EsrBinDecayEvent();
-    EsrBinDecayEvent(int DecayChannel, int DataType=SIDS::kRSA1);
+    EsrBinDecayEvent(int DecayChannel, int DataType=SIDS::kRSA51);
     //EsrBinDecayEvent(const EsrBinDecayEvent& orig);
     virtual ~EsrBinDecayEvent();
     

@@ -13,9 +13,9 @@ namespace SIDS
     enum DataType 
     {   kUnknownData, 
         kPickup, 
-        kRSA1, 
-        kRSA2, 
-        kRSA3, 
+        kRSA51, 
+        kRSA52, 
+        kRSA30, 
         kTCAP
     };
         

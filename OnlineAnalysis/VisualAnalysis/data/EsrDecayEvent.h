@@ -24,7 +24,7 @@ public:
     
     
     EsrDecayEvent();
-    EsrDecayEvent(int DecayChannel, int DataType=SIDS::kRSA1);
+    EsrDecayEvent(int DecayChannel, int DataType=SIDS::kRSA51);
     EsrDecayEvent(EsrBinDecayEvent BinEvent, float TimeResolution, float FreqResolution, float FreqOffset=244000000, bool Bincentered=true);
 
     virtual ~EsrDecayEvent();

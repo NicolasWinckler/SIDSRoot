@@ -112,14 +112,16 @@ protected:
    TGLabel              *fStatus;      // label used to display status
    TGStatusBar          *fStatusBar;
    TGraph               *fGraph;       // TGraph object
-   TH1F                 *fHist1D;      // 1D histogram
-   TH2F                 *fHist2D;      // 2D histogram
+   TH1D                 *fHisto_px;      // freq proj
+   TH1D                 *fHistoP_py;      //  parent proj
+   TH1D                 *fHistoD_py;      // daughter proj
    TGVerticalFrame      *fControlFrame;
    TGHorizontalFrame    *fAddRemoveButtonsFrm;
    TH2D                 *fSidsHisto;
    TString              fFileName;
    TGFileInfo           fFileInfo;
    EsrInjData           fDecayData;
+   string               fDetectorID;
    //TGCompositeFrame   *fEditorFrame;
    //TVirtualPadEditor  *fEditor;
    
@@ -139,7 +141,7 @@ public:
    void              DoDraw();
    void              DoCloseWindow();
    void              HandleMenu(Int_t);
-   TObject          *GetObject(const char *obj);
+   //TObject          *GetObject(const char *obj);
    void              OpenRootFile();//TGFileInfo fileInfo);
    void              DataDropped(TGListTreeItem* item, TDNDData* data);
    void              ResetStatus();

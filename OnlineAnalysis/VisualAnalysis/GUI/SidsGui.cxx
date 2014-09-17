@@ -55,9 +55,10 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
         fMenuBar(NULL), fMenuFile(NULL),
         fMenuHelp(NULL), fCanvas1(NULL), fCanvas2(NULL), fListTree(NULL),
         fBaseLTI(NULL), fStatus(NULL), fStatusBar(NULL), 
-        fGraph(NULL), fHist1D(NULL), fHist2D(NULL), fControlFrame(NULL),
+        fGraph(NULL), fHisto_px(NULL), fHistoP_py(NULL), fHistoD_py(NULL),
+        fControlFrame(NULL),
         fSidsHisto(NULL), fFileName(Filename.c_str()), fFileInfo(), 
-        fDecayData() ,fDecayCounter(0), 
+        fDecayData() ,fDetectorID("RSA51") , fDecayCounter(0), 
         fHisto1DCounter(0), fHisto2DCounter(0),fHeaderCounter(0),
         fReadyToSend(false), fSampler(false),
         fSamplerConfig(SamplerConfig)
@@ -106,29 +107,9 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    fCanvas1->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","SidsGui",this,
                "EventInfo(Int_t,Int_t,Int_t,TObject*)");
    
-   /// example tree (start))
-   fBaseLTI = fListTree->AddItem(0, "Base");
    
    gRootObj  = gVirtualX->InternAtom("application/root", kFALSE);
 
-   TGraph *gr = (TGraph *)GetObject("Graph");
-   pic = gClient->GetPicture("f1_t.xpm");
-   item = fListTree->AddItem(fBaseLTI, gr->GetName(), gr, pic, pic);
-   fListTree->SetToolTipItem(item, "Simple Graph");
-   item->SetDNDSource(kTRUE);
-
-   TH1F *hpx = (TH1F *)GetObject("1D Hist");
-   pic = gClient->GetPicture("h1_t.xpm");
-   item = fListTree->AddItem(fBaseLTI, hpx->GetName(), hpx, pic, pic);
-   fListTree->SetToolTipItem(item, "1D Histogram");
-   item->SetDNDSource(kTRUE);
-
-   TH2F *h2 = (TH2F *)GetObject("2D Hist");
-   pic = gClient->GetPicture("h2_t.xpm");
-   h2->SetDrawOption("ZCOL");
-   item = fListTree->AddItem(fBaseLTI, h2->GetName(), h2, pic, pic);
-   fListTree->SetToolTipItem(item, "2D Histogram");
-   item->SetDNDSource(kTRUE);
 
    TString rootsys(gSystem->UnixPathName(gSystem->Getenv("ROOTSYS")));
 #ifdef G__WIN32
@@ -136,27 +117,11 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    if (rootsys[1] == ':' && rootsys[2] == '/')
       rootsys.Remove(0, 3);
 #endif
-   //TString link = TString::Format("/%s/tutorials/image/rose512.jpg", rootsys.Data());
-   TString link ="/Users/winckler/Pictures/Bosch.jpg";
-   if (!gSystem->AccessPathName(link.Data(), kReadPermission)) 
-   {
-        TImage *img = TImage::Open(link.Data());
-        if (img) 
-        {
-            // create a 16x16 icon from the original picture
-            img->Scale(16, 16);
-            pic = gClient->GetPicturePool()->GetPicture("Fritz", img->GetPixmap(),
-                                                        img->GetMask());
-            delete img;
-        }
-        else pic = gClient->GetPicture("psp_t.xpm");
-        link.Prepend("file://");
-        TObjString *ostr = new TObjString(link.Data());
-        item = fListTree->AddItem(fBaseLTI, "Fritz", ostr, pic, pic);
-        fListTree->SetToolTipItem(item, link.Data());
-        item->SetDNDSource(kTRUE);
-   }
-
+   
+    fFileName=fSamplerConfig.GetInputFile().c_str();
+    TFile* rootfile0 = new TFile(fFileName);
+    RootFileManager(rootfile0);
+   
    // open the base list tree item and allow to drop into it
    fListTree->OpenItem(fBaseLTI);
    fListTree->GetFirstItem()->SetDNDTarget(kTRUE);
@@ -165,6 +130,8 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    fListTree->Connect("DataDropped(TGListTreeItem*, TDNDData*)", "SidsGui",
                       this, "DataDropped(TGListTreeItem*,TDNDData*)");
 
+   
+   
    
    ////////////////////////////////////////////////////// 1st layer 2nd col
    ///
@@ -275,9 +242,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
     AddFrame(fStatusBar, new TGLayoutHints(kLHintsExpandX, 0, 0, 10, 0));
    
 
-    fFileName=fSamplerConfig.GetInputFile().c_str();
-    TFile* rootfile0 = new TFile(fFileName);
-    RootFileManager(rootfile0);
+    
    //////////////////////////////////////////////////////
    
    SetWindowName("Single Ion Decay Spectroscopy Analysis");
@@ -326,144 +291,16 @@ SidsGui::~SidsGui()
    
 }
 
+
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
+/// ////////////////////////////// file/object managing function /////////////////////////////////
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
-void SidsGui::DoCloseWindow()
-{
-   // Do some cleanup, disconnect signals and then really close the main window.
-
-   if (fGraph) { delete fGraph; fGraph = 0; }
-   if (fHist1D) { delete fHist1D; fHist1D = 0; }
-   if (fHist2D) { delete fHist2D; fHist2D = 0; }
-   if (fSidsHisto) { delete fSidsHisto; fSidsHisto = 0; }
-   fMenuFile->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
-   fMenuHelp->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
-   fButtonExit->Disconnect("Clicked()" , this, "CloseWindow()");
-   fListTree->Disconnect("DataDropped(TGListTreeItem*, TDNDData*)", this,
-                         "DataDropped(TGListTreeItem*,TDNDData*)");
-   //TVirtualPadEditor::Terminate();
-   
-   for(unsigned int i(0);i<f1DHisto.size() ; i++)
-   {
-       if(f1DHisto[i])
-       {
-            delete f1DHisto[i];
-            f1DHisto[i]=NULL;
-       }
-   }
-   f1DHisto.clear();
-   fHisto1DCounter=0;
-   fDecayCounter=0;
-   delete fListTree;
-   CloseWindow();
-}
-
-//______________________________________________________________________________
-void SidsGui::DataDropped(TGListTreeItem *, TDNDData *data)
-{
-   // Handle the drop event in the TGListTree. This will just create a new
-   // list tree item and copy the received data into it.
-
-   fStatus->SetTextColor(0xff0000);
-   fStatus->ChangeText("I received data!!!");
-   if (data) 
-   {
-      const TGPicture *pic = 0;
-      TGListTreeItem *itm = 0;
-      char tmp[1000];
-      if (data->fDataType == gRootObj) 
-      {
-         TBufferFile buf(TBuffer::kRead, data->fDataLength, (void *)data->fData);
-         buf.SetReadMode();
-         TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
-         TH2D* h2dObj;
-         sprintf(tmp, "Received DND data : Type = \"%s\"; Length = %d bytes;",
-                 obj->ClassName(), data->fDataLength);
-         if (obj->InheritsFrom("TGraph"))
-            pic = gClient->GetPicture("f1_t.xpm");
-         else if (obj->InheritsFrom("TH2"))
-            pic = gClient->GetPicture("h2_t.xpm");
-         else if (obj->InheritsFrom("TH1"))
-            pic = gClient->GetPicture("h1_t.xpm");
-         
-            itm = fListTree->AddItem(fBaseLTI, obj->GetName(), obj, pic, pic);
-            fListTree->SetToolTipItem(itm, obj->GetName());
-         
-      }
-      else 
-      {
-         sprintf(tmp, "Received DND data: \"%s\"", (char *)data->fData);
-         TObjString *ostr = new TObjString((char *)data->fData);
-         TImage *img1 = TImage::Open("doc_t.xpm");
-         TImage *img2 = TImage::Open("slink_t.xpm");
-         if (img1 && img2) {
-            img1->Merge(img2);
-            pic = gClient->GetPicturePool()->GetPicture("doc_lnk", img1->GetPixmap(),
-                                                        img1->GetMask());
-            delete img2;
-            delete img1;
-         }
-         else pic = gClient->GetPicture("doc_t.xpm");
-         itm = fListTree->AddItem(fBaseLTI, "Link...", ostr, pic, pic);
-         fListTree->SetToolTipItem(itm, (const char *)data->fData);
-      }
-      if (itm) itm->SetDNDSource(kTRUE);
-      fStatus->ChangeText(tmp);
-   }
-   TTimer::SingleShot(3000, "SidsGui", this, "ResetStatus()");
-   fCanvas1->Update();
-}
-
-//______________________________________________________________________________
-TObject *SidsGui::GetObject(const char *obj)
-{
-   // Return the object specified in argument. If the object doesn't exist yet,
-   // it is firt created.
-
-   if (!strcmp(obj, "Graph")) {
-      if (fGraph == 0) {
-         const Int_t n = 20;
-         Double_t x[n], y[n];
-         for (Int_t i=0;i<n;i++) {
-           x[i] = i*0.1;
-           y[i] = 10*sin(x[i]+0.2);
-         }
-         fGraph = new TGraph(n, x, y);
-      }
-      return fGraph;
-   }
-   else if (!strcmp(obj, "1D Hist")) {
-      if (fHist1D == 0) {
-         fHist1D = new TH1F("1D Hist","This is the px distribution",100,-4,4);
-         Float_t px, py;
-         for ( Int_t i=0; i<10000; i++) {
-            gRandom->Rannor(px, py);
-            fHist1D->Fill(px);
-         }
-      }
-      return fHist1D;
-   }
-   else if (!strcmp(obj, "2D Hist")) {
-      if (fHist2D == 0) {
-         Double_t params[] = {
-            130,-1.4,1.8,1.5,1, 150,2,0.5,-2,0.5, 3600,-2,0.7,-3,0.3
-         };
-         TF2 *f2 = new TF2("f2","xygaus + xygaus(5) + xylandau(10)",
-                           -4, 4, -4, 4);
-         f2->SetParameters(params);
-         fHist2D = new TH2F("2D Hist","xygaus+xygaus(5)+xylandau(10)",
-                            20, -4, 4, 20, -4, 4);
-         fHist2D->FillRandom("f2",40000);
-         fHist2D->SetDrawOption("ZCOL");
-      }
-      return fHist2D;
-   }
-   return 0;
-}
-void SidsGui::OpenRootFile()//TGFileInfo fileInfo)
+void SidsGui::OpenRootFile()
 {
     static TString dir(".");
-   fFileInfo.fFileTypes = dnd_types;
-   fFileInfo.fIniDir    = StrDup(dir);
+    fFileInfo.fFileTypes = dnd_types;
+    fFileInfo.fIniDir    = StrDup(dir);
     new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &fFileInfo);
     dir = fFileInfo.fIniDir;
     fFileName=fFileInfo.fFilename;
@@ -473,32 +310,34 @@ void SidsGui::OpenRootFile()//TGFileInfo fileInfo)
     TFile* rootfile = new TFile(fFileName);
     
     RootFileManager(rootfile);
-    //h_iqt_spectrum
-    //TH2D* fRooData= (TH2D*) rootfile->Get(DataName.c_str());
 }
 
+//______________________________________________________________________________
+int SidsGui::RootFileManager(TFile* rootfile)
+{
 
+    if (!rootfile->IsOpen()) 
+    {
+      std::cout<<"Cannot open file "<<fFileName.Data()<<std::endl;
+      return 0;
+    }
 
-
-
-
-
-/*
-#include "TFile.h"
-#include "TKey.h"
-#include "TMacro.h"
-   
-Int_t nlines = 0;
-Int_t nfiles = 0;
-Int_t ndirs = 0;
-Int_t nh = 0;
-Int_t nc = 0;
-Int_t nC = 0;
-Int_t npy = 0;
-*/
+    TList* list = rootfile->GetListOfKeys() ;
+    if (!list) 
+    { 
+          std::cout<<"No key found in file "<<fFileName.Data()<<std::endl;
+          return 0;
+    }
+    
+    fBaseLTI = fListTree->AddItem(0, (boost::filesystem::basename(fFileName.Data())).c_str());
+    
+    TDirectory *CurrentDir=gDirectory;
+    ReadDir(CurrentDir);
+    return 1;
+}
+//______________________________________________________________________________
 void SidsGui::ReadDir(TDirectory *dir) 
 {
-   //ndirs++;
    TDirectory *dirsav = gDirectory;
    TIter next(dir->GetListOfKeys());
    TKey *key;
@@ -514,26 +353,17 @@ void SidsGui::ReadDir(TDirectory *dir)
       }
       else
           SeekObject(key);
-      /*
-      TMacro *macro = (TMacro*)key->ReadObj();
-      nfiles++;
-      nlines += macro->GetListOfLines()->GetEntries();
-      if (strstr(key->GetName(),".h"))   nh++;
-      if (strstr(key->GetName(),".c"))   nc++;
-      if (strstr(key->GetName(),".C"))   nC++;
-      if (strstr(key->GetName(),".py"))  npy++;
-      delete macro;
-      */
-   }
+      
+    }
 }
 
-
+//______________________________________________________________________________
 void SidsGui::SeekObject(TKey *key)
 {
     TObject* obj ;
     const TGPicture *pic = 0;
     TGListTreeItem *item;
-    //TH1F *h = (TH1F*)gDirectory->Get("myHist");
+
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
             && (!obj->InheritsFrom("TH2"))
@@ -565,6 +395,24 @@ void SidsGui::SeekObject(TKey *key)
         }
     }
     
+    
+    if(obj->InheritsFrom("TH1F"))
+    {
+        TH1D* histo1D=NULL;
+        histo1D=(TH1D*)gDirectory->Get(obj->GetName());
+
+        if(histo1D) 
+        {
+            f1DHisto.push_back(new TH1D(*histo1D));
+            pic = gClient->GetPicture("h1_t.xpm");
+            item = fListTree->AddItem(fBaseLTI, f1DHisto[fHisto1DCounter]->GetName(), f1DHisto[fHisto1DCounter], pic, pic);
+            fListTree->SetToolTipItem(item, "1D Histogram");
+            item->SetDNDSource(kTRUE);
+            fHisto1DCounter++;
+        }
+    }
+    
+    
     /// SEARCH FOR TH2D
     if(obj->InheritsFrom("TH2D"))
     {
@@ -584,11 +432,6 @@ void SidsGui::SeekObject(TKey *key)
             fHisto2DCounter++;
         }
         
-        //pic = gClient->GetPicture("h2_t.xpm");
-        //item = fListTree->AddItem(fBaseLTI, fSidsHisto->GetName(), fSidsHisto, pic, pic);
-        //fListTree->SetToolTipItem(item, "2D Histogram");
-        //item->SetDNDSource(kTRUE);
-        
     }
     
     /// SEARCH FOR HEADERS
@@ -598,9 +441,7 @@ void SidsGui::SeekObject(TKey *key)
         RsaHeader=(Header*)gDirectory->Get(obj->GetName());
         //std::cout<<"Header name = "<<obj->GetName()<<std::endl;
         
-        
-        
-        RsaHeader->Show();
+        //RsaHeader->Show();
         if(RsaHeader)
         {
             fHeaders.push_back(new Header(*RsaHeader));
@@ -664,66 +505,179 @@ void SidsGui::ResetStatus()
 }
 
 
-int SidsGui::RootFileManager(TFile* rootfile)
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
+/// ////////////////////////////// Signal/slot functions /////////////////////////////////
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+void SidsGui::DoCloseWindow()
 {
+   // Do some cleanup, disconnect signals and then really close the main window.
 
-    if (!rootfile->IsOpen()) 
+   if (fGraph) { delete fGraph; fGraph = 0; }
+   if (fHisto_px) { delete fHisto_px; fHisto_px = 0; }
+   if (fHistoP_py) { delete fHistoP_py; fHistoP_py = 0; }
+   if (fHistoD_py) { delete fHistoD_py; fHistoD_py = 0; }
+   if (fSidsHisto) { delete fSidsHisto; fSidsHisto = 0; }
+   fMenuFile->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
+   fMenuHelp->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
+   fButtonExit->Disconnect("Clicked()" , this, "CloseWindow()");
+   fListTree->Disconnect("DataDropped(TGListTreeItem*, TDNDData*)", this,
+                         "DataDropped(TGListTreeItem*,TDNDData*)");
+   //TVirtualPadEditor::Terminate();
+   
+    for(unsigned int i(0);i<f1DHisto.size() ; i++)
     {
-      std::cout<<"Cannot open file "<<fFileName.Data()<<std::endl;
-      return 0;
-    }
-
-    TList* list = rootfile->GetListOfKeys() ;
-    if (!list) 
-    { 
-          std::cout<<"No key found in file "<<fFileName.Data()<<std::endl;
-          return 0;
-    }
-    
-    fBaseLTI = fListTree->AddItem(0, (boost::filesystem::basename(fFileName.Data())).c_str());
-    
-    TDirectory *CurrentDir=gDirectory;
-    ReadDir(CurrentDir);
-    return 1;
-}
-
-void SidsGui::DoDraw() 
-{
-    //fEc2->GetCanvas()->EditorBar();
-    //TVirtualPadEditor::ShowEditor();
-    //fCanvas2 = fEc2->GetCanvas();
-    
-    //Int_t wid = fEc2->GetCanvasWindowId();
-    //fCanvas2 = new TCanvas("MyCanvas", 10,10,wid);
-    //fEc2->AdoptCanvas(fCanvas2);
-    
-    if(fSidsHisto)
-    {
-        Int_t binMax=fSidsHisto->ProjectionX()->GetMaximumBin();
-        Double_t Xmin=fSidsHisto->GetXaxis()->GetBinCenter(binMax-175);
-        Double_t Xmax=fSidsHisto->GetXaxis()->GetBinCenter(binMax+175);
-        //std::cout<<"Xmin : "<< Xmin<<std::endl;
-        //std::cout<<"Xax : "<< Xmax<<std::endl;
-        fSidsHisto->GetXaxis()->SetRangeUser(Xmin,Xmax);
-        TH2D* histo=dynamic_cast<TH2D*>(fSidsHisto->RebinX(2,"SchottkySpectrum"));
-        if(histo)
+        if(f1DHisto[i])
         {
-            //histo->SetMaximum(5.e-7);
-            histo->Draw("zcol");
+             delete f1DHisto[i];
+             f1DHisto[i]=NULL;
         }
     }
+    f1DHisto.clear();
+   
+    for(unsigned int i(0);i<f2DHisto.size() ; i++)
+    {
+        if(f2DHisto[i])
+        {
+             delete f2DHisto[i];
+             f2DHisto[i]=NULL;
+        }
+    }
+    f2DHisto.clear();
+   
+    for(unsigned int i(0);i<fHeaders.size() ; i++)
+    {
+        if(fHeaders[i])
+        {
+             delete fHeaders[i];
+             fHeaders[i]=NULL;
+        }
+    }
+    fHeaders.clear();
+    fHisto1DCounter=0;
+    fHisto2DCounter=0;
+    fDecayCounter=0;
+    delete fListTree;
+    CloseWindow();
+}
+
+//______________________________________________________________________________
+void SidsGui::DataDropped(TGListTreeItem *, TDNDData *data)
+{
+   // Handle the drop event in the TGListTree. This will just create a new
+   // list tree item and copy the received data into it.
+
+   fStatus->SetTextColor(0xff0000);
+   fStatus->ChangeText("I received data!!!");
+   if (data) 
+   {
+      const TGPicture *pic = 0;
+      TGListTreeItem *itm = 0;
+      char tmp[1000];
+      if (data->fDataType == gRootObj) 
+      {
+         TBufferFile buf(TBuffer::kRead, data->fDataLength, (void *)data->fData);
+         buf.SetReadMode();
+         TObject *obj = (TObject *)buf.ReadObjectAny(TObject::Class());
+         sprintf(tmp, "Received DND data : Type = \"%s\"; Length = %d bytes;",
+                 obj->ClassName(), data->fDataLength);
+         if (obj->InheritsFrom("TGraph"))
+            pic = gClient->GetPicture("f1_t.xpm");
+         else if (obj->InheritsFrom("TH2"))
+            pic = gClient->GetPicture("h2_t.xpm");
+         else if (obj->InheritsFrom("TH1"))
+            pic = gClient->GetPicture("h1_t.xpm");
+         
+            itm = fListTree->AddItem(fBaseLTI, obj->GetName(), obj, pic, pic);
+            fListTree->SetToolTipItem(itm, obj->GetName());
+         
+      }
+      else 
+      {
+         sprintf(tmp, "Received DND data: \"%s\"", (char *)data->fData);
+         TObjString *ostr = new TObjString((char *)data->fData);
+         TImage *img1 = TImage::Open("doc_t.xpm");
+         TImage *img2 = TImage::Open("slink_t.xpm");
+         if (img1 && img2) {
+            img1->Merge(img2);
+            pic = gClient->GetPicturePool()->GetPicture("doc_lnk", img1->GetPixmap(),
+                                                        img1->GetMask());
+            delete img2;
+            delete img1;
+         }
+         else pic = gClient->GetPicture("doc_t.xpm");
+         itm = fListTree->AddItem(fBaseLTI, "Link...", ostr, pic, pic);
+         fListTree->SetToolTipItem(itm, (const char *)data->fData);
+      }
+      if (itm) itm->SetDNDSource(kTRUE);
+      fStatus->ChangeText(tmp);
+   }
+   TTimer::SingleShot(3000, "SidsGui", this, "ResetStatus()");
+   fCanvas1->Update();
+}
+
+//______________________________________________________________________________
+void SidsGui::DoDraw() 
+{
+    
+    string mtpSuffix("_mtpsd6");
+    //string fftSuffix("_fft");
+    string histoID(fDetectorID);
+    histoID+=mtpSuffix;
+    
+    for(unsigned int i(0);i<f2DHisto.size();i++)
+    {
+        if(f2DHisto[i])
+        {
+            string histoname=string(f2DHisto[i]->GetName());
+            size_t found = histoname.find(histoID);
+
+            if(found!=std::string::npos)
+            {
+                if(fHisto_px)
+                {
+                    delete fHisto_px;
+                    fHisto_px=NULL;
+                }
+                //fHisto_px=f2DHisto[i]->ProjectionX();
+                //Int_t binMax=fHisto_px->GetMaximumBin();
+                Int_t binMax=f2DHisto[i]->ProjectionX()->GetMaximumBin();
+                Double_t Xmin=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax-175);
+                Double_t Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax+175);
+                //std::cout<<"Xmin : "<< Xmin<<std::endl;
+                //std::cout<<"Xax : "<< Xmax<<std::endl;
+                f2DHisto[i]->GetXaxis()->SetRangeUser(Xmin,Xmax);
+                
+                histoname+="_Rebinned";
+
+                TH2D* histo=dynamic_cast<TH2D*>(f2DHisto[i]->RebinX(2,histoname.c_str()));
+                if(histo)
+                {
+                    //histo->SetMaximum(5.e-7);
+                    histo->Draw("zcol");
+                }
+                break;
+            }
+        }
+    }
+        
+    
         
     
     
     fCanvas2->cd();
     fCanvas2->Update();
     
+    //fCanvas1->cd();
+    //fHisto_px->Draw();
     
+    //fCanvas1->Update();
 }
 
 
 
-
+//______________________________________________________________________________
 void SidsGui::AddDecay()
 {
     TString name("Decay");
@@ -755,7 +709,7 @@ void SidsGui::AddDecay()
 
 
 
-
+//______________________________________________________________________________
 void SidsGui::RemoveDecay()
 {
     Int_t index=fDecayCounter-1;
@@ -779,7 +733,7 @@ void SidsGui::RemoveDecay()
     //Resize();
     Resize(GetDefaultSize());
 }
-
+//______________________________________________________________________________
 void SidsGui::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
    const char *text0, *text1, *text3;
@@ -797,13 +751,13 @@ void SidsGui::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
    fStatusBar->SetText(text3,3);
 }
 
-
+//______________________________________________________________________________
 void SidsGui::DoExit()
 {
     TVirtualPadEditor::Terminate();
     gApplication->Terminate(0);
 }
-
+//______________________________________________________________________________
 void SidsGui::DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *selected)
 {
        Float_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
@@ -829,7 +783,7 @@ void SidsGui::DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *selected)
        }
 }
 
-
+//______________________________________________________________________________
 void SidsGui::DoValidate()
 {
     //std::cout<<"Decay Rev. Freq is : "  <<fDecayFreq[0]<<std::endl;
@@ -838,8 +792,45 @@ void SidsGui::DoValidate()
     
     //std::cout<<"Qualitytag is : "  << fFileQualityTag->GetTag() <<std::endl;
     //std::cout<<"comment is : "       << fFileQualityTag->GetComment() <<std::endl;
+    string headerSuffix("_header");
+    string headerID(fDetectorID);
+    headerID+=headerSuffix;
     
-    EsrInjData DecayData(fFileName.Data(),SIDS::kRSA1,0.032,31.25);
+    int detectorID=SIDS::kRSA51;
+    float freqresolution=31.25;
+    float freqoffset=0.;
+    float timeresolution=0.032;
+    
+    for(unsigned int i(0);i<fHeaders.size();i++)
+    {
+        if(fHeaders[i])
+        {
+            string headerName=string(fHeaders[i]->GetName());
+            size_t found = headerName.find(headerID);
+            
+            if(found!=std::string::npos)
+            {
+                if(headerName=="RSA51_header")
+                    detectorID=SIDS::kRSA51;
+                
+                if(headerName=="RSA52_header")
+                    detectorID=SIDS::kRSA52;
+                
+                if(headerName=="RSA30_header")
+                    detectorID=SIDS::kRSA30;
+                
+                
+                freqoffset=(float)(fHeaders[i]->GetCenterFrequency()-fHeaders[i]->GetSpan()/2.);
+                timeresolution=(float)(fHeaders[i]->GetFrameLength());
+                freqresolution=1./timeresolution;
+                fHeaders[i]->Show();
+            }
+            
+        }
+    }
+        
+    
+    EsrInjData DecayData(fFileName.Data(),detectorID,timeresolution,freqresolution,freqoffset);
     DecayData.SetUserName(fSamplerConfig.GetUserName());
     DecayData.SetQualityTag(fFileQualityTag->GetTag());
     DecayData.SetFileComment(fFileQualityTag->GetComment());
@@ -859,6 +850,7 @@ void SidsGui::DoValidate()
     fDecayData=DecayData;
     
     vector<EsrDecayEvent> DecayList=fDecayData.GetECData();
+    
     std::cout<<"---------------- PRINT DECAYS ------------"<<std::endl;
     for(unsigned int i(0);i<DecayList.size();i++)
     {
@@ -876,9 +868,10 @@ void SidsGui::DoValidate()
         StartSampler();
 }
 
-
-
-
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
+/// ////////////////////////////// MQ function /////////////////////////////////
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
 void SidsGui::StartSampler()
 {
     
