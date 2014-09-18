@@ -38,6 +38,7 @@
 #include "TFile.h"
 #include "TClass.h"
 #include "TKey.h"
+#include "TSpectrum.h"
 
 #include "TGStatusBar.h"
 #include "TVirtualPadEditor.h"
@@ -113,15 +114,15 @@ protected:
    TGStatusBar          *fStatusBar;
    TGraph               *fGraph;       // TGraph object
    TH1D                 *fHisto_px;      // freq proj
-   TH1D                 *fHistoP_py;      //  parent proj
-   TH1D                 *fHistoD_py;      // daughter proj
+   TH1D                 *fParentTrace;      //  parent proj
+   TH1D                 *fDaughterTrace;      // daughter proj
+   TH1I                 *fNEC;
    TGVerticalFrame      *fControlFrame;
-   TGHorizontalFrame    *fAddRemoveButtonsFrm;
-   TH2D                 *fSidsHisto;
    TString              fFileName;
    TGFileInfo           fFileInfo;
    EsrInjData           fDecayData;
    string               fDetectorID;
+   float                fParentFreq;
    //TGCompositeFrame   *fEditorFrame;
    //TVirtualPadEditor  *fEditor;
    
@@ -134,6 +135,8 @@ protected:
    
    int RootFileManager(TFile* rootfile);
    void SeekObject(TKey *key);
+   int AddToListTree(TObject* obj);
+   void FindTraces(TH2D* hist2d, Int_t BinPWindow=10, Int_t BinDWindow=10, Int_t BinDist=52, Double_t sigma = 4., Option_t* option = "", Double_t threshold = 0.2);
    
 public:
    SidsGui(const TGWindow *p, int w, int h, MQconfig SamplerConfig, std::string Filename="");
@@ -151,7 +154,8 @@ public:
    void              AddDecay();
    void              RemoveDecay();
    void              StartSampler();
-   
+   void AddToRootFile(TObject* obj, string outputFileName, string fileOption="NEW");
+   void SaveHisto(string outputFileName);
    void DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *);
    
    bool ReadyToSend() const {return fReadyToSend;}

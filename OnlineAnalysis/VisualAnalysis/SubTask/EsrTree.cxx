@@ -34,13 +34,13 @@ void EsrTree::UpdateTree(EsrInjData EsrData)
     {
         if(fTree)
         {
-            std::cout<<"update tree : "<< fFileName <<std::endl;
+            std::cout<<"[INFO] Update tree : "<< fFileName <<std::endl;
             fTree->SetBranchAddress(fBranchName.c_str(),&fEsrData);
             fTree->Fill();
         }
         else
         {
-            std::cout<<"Create new tree : "<< fFileName <<std::endl;
+            std::cout<<"[INFO] Create new tree : "<< fFileName <<std::endl;
             fTree = new TTree(fTreeName.c_str(), "EsrTree output");
             fTree->Branch(fBranchName.c_str(),"EsrInjData", &fEsrData);
             fTree->Fill();

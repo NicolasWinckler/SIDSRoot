@@ -55,10 +55,10 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
         fMenuBar(NULL), fMenuFile(NULL),
         fMenuHelp(NULL), fCanvas1(NULL), fCanvas2(NULL), fListTree(NULL),
         fBaseLTI(NULL), fStatus(NULL), fStatusBar(NULL), 
-        fGraph(NULL), fHisto_px(NULL), fHistoP_py(NULL), fHistoD_py(NULL),
-        fControlFrame(NULL),
-        fSidsHisto(NULL), fFileName(Filename.c_str()), fFileInfo(), 
-        fDecayData() ,fDetectorID("RSA51") , fDecayCounter(0), 
+        fGraph(NULL), fHisto_px(NULL), fParentTrace(NULL), fDaughterTrace(NULL),
+        fNEC(NULL), fControlFrame(NULL),
+        fFileName(Filename.c_str()), fFileInfo(), 
+        fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.), fDecayCounter(0), 
         fHisto1DCounter(0), fHisto2DCounter(0),fHeaderCounter(0),
         fReadyToSend(false), fSampler(false),
         fSamplerConfig(SamplerConfig)
@@ -102,7 +102,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    fEc->SetDNDTarget(kTRUE);
    fCanvas1 = fEc->GetCanvas();
    
-   //fCanvas1->Divide(1, 2);
+   fCanvas1->Divide(2, 2);
    //fCanvas1->SetBorderMode(0);
    fCanvas1->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","SidsGui",this,
                "EventInfo(Int_t,Int_t,Int_t,TObject*)");
@@ -243,6 +243,22 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
     AddFrame(fStatusBar, new TGLayoutHints(kLHintsExpandX, 0, 0, 10, 0));
    
 
+    ////////////////////////////////////////////////////// load number of EC histogram
+    
+    string outputfilename=fSamplerConfig.GetOutputFile();
+    string treename=fSamplerConfig.GetTreeName();
+    string branchname=fSamplerConfig.GetBranch();
+    EsrTree DecayTree(outputfilename,treename,branchname);
+    std::vector<EsrInjData> DataList=DecayTree.GetEsrData();
+    
+    int binNumber=(int)DataList.size();
+    fNEC = new TH1I("N_{EC}","Number of EC vs injection number",binNumber,1.,(Double_t)binNumber);
+    for(unsigned int i(0); i<DataList.size(); i++)
+    {
+        int NumbEC=DataList[i].GetNEC();
+        fNEC->SetBinContent(i+1,NumbEC);
+    }
+    
     
    //////////////////////////////////////////////////////
    
@@ -305,12 +321,50 @@ void SidsGui::OpenRootFile()
     new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &fFileInfo);
     dir = fFileInfo.fIniDir;
     fFileName=fFileInfo.fFilename;
-    std::cout<<"Opening  ="<<fFileName <<std::endl;
+    std::cout<<"Opening "<<fFileName <<std::endl;
     //std::cout<<boost::filesystem::basename(fFileName.Data())<<std::endl;
     
     TFile* rootfile = new TFile(fFileName);
     
     RootFileManager(rootfile);
+}
+
+
+void SidsGui::AddToRootFile(TObject* obj, string outputFileName, string fileOption)
+{
+    
+    TFile* rootfile = new TFile(outputFileName.c_str(),fileOption.c_str());
+    obj->Write("",kWriteDelete);
+    rootfile->Close();
+    delete rootfile;
+}
+
+void SidsGui::SaveHisto(string outputFileName)
+{
+    for(unsigned int i(0);i<f1DHisto.size();i++)
+        if(f1DHisto[i])
+            AddToRootFile(f1DHisto[i],outputFileName,"UPDATE");
+    
+    for(unsigned int i(0);i<f2DHisto.size();i++)
+        if(f2DHisto[i])
+            AddToRootFile(f2DHisto[i],outputFileName,"UPDATE");
+    
+    for(unsigned int i(0);i<fHeaders.size();i++)
+        if(fHeaders[i])
+            AddToRootFile(fHeaders[i],outputFileName,"UPDATE");
+    
+    if(fHisto_px)
+        AddToRootFile(fHisto_px,outputFileName,"UPDATE");
+    
+    if(fParentTrace)
+        AddToRootFile(fParentTrace,outputFileName,"UPDATE");
+    
+    if(fDaughterTrace)
+        AddToRootFile(fDaughterTrace,outputFileName,"UPDATE");
+    
+    if(fNEC)
+        AddToRootFile(fNEC,outputFileName,"UPDATE");
+    
 }
 
 //______________________________________________________________________________
@@ -319,14 +373,14 @@ int SidsGui::RootFileManager(TFile* rootfile)
 
     if (!rootfile->IsOpen()) 
     {
-      std::cout<<"Cannot open file "<<fFileName.Data()<<std::endl;
+      std::cout<<"[ERROR] Cannot open file "<<fFileName.Data()<<std::endl;
       return 0;
     }
 
     TList* list = rootfile->GetListOfKeys() ;
     if (!list) 
     { 
-          std::cout<<"No key found in file "<<fFileName.Data()<<std::endl;
+          std::cout<<"[ERROR] No key found in file "<<fFileName.Data()<<std::endl;
           return 0;
     }
     
@@ -336,6 +390,8 @@ int SidsGui::RootFileManager(TFile* rootfile)
     ReadDir(CurrentDir);
     return 1;
 }
+
+
 //______________________________________________________________________________
 void SidsGui::ReadDir(TDirectory *dir) 
 {
@@ -362,20 +418,17 @@ void SidsGui::ReadDir(TDirectory *dir)
 void SidsGui::SeekObject(TKey *key)
 {
     TObject* obj ;
-    const TGPicture *pic = 0;
-    TGListTreeItem *item;
-
     obj = key->ReadObj();
     if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
             && (!obj->InheritsFrom("TH2"))
             && (!obj->InheritsFrom("TH1"))  
             && (!obj->InheritsFrom("Header"))
-            ) 
+            )
     {
-        printf("<W> Object %s is not 1D or 2D histogram : "
-           "will not be converted\n",obj->GetName()) ;
+        printf("[Warning] Object %s is not a header nor 1D nor 2D histogram : "
+           "will not be converted\n",obj->GetName());
     }
-    printf("Histo name:%s title:%s\n",obj->GetName(),obj->GetTitle());
+    printf("[INFO] Histo name:%s title:%s\n", obj->GetName(), obj->GetTitle());
 
     
     
@@ -388,15 +441,12 @@ void SidsGui::SeekObject(TKey *key)
         if(histo1D) 
         {
             f1DHisto.push_back(new TH1D(*histo1D));
-            pic = gClient->GetPicture("h1_t.xpm");
-            item = fListTree->AddItem(fBaseLTI, f1DHisto[fHisto1DCounter]->GetName(), f1DHisto[fHisto1DCounter], pic, pic);
-            fListTree->SetToolTipItem(item, "1D Histogram");
-            item->SetDNDSource(kTRUE);
+            AddToListTree(f1DHisto[fHisto1DCounter]);
             fHisto1DCounter++;
         }
     }
     
-    
+    /// SEARCH FOR TH1F
     if(obj->InheritsFrom("TH1F"))
     {
         TH1D* histo1D=NULL;
@@ -405,10 +455,7 @@ void SidsGui::SeekObject(TKey *key)
         if(histo1D) 
         {
             f1DHisto.push_back(new TH1D(*histo1D));
-            pic = gClient->GetPicture("h1_t.xpm");
-            item = fListTree->AddItem(fBaseLTI, f1DHisto[fHisto1DCounter]->GetName(), f1DHisto[fHisto1DCounter], pic, pic);
-            fListTree->SetToolTipItem(item, "1D Histogram");
-            item->SetDNDSource(kTRUE);
+            AddToListTree(f1DHisto[fHisto1DCounter]);
             fHisto1DCounter++;
         }
     }
@@ -420,16 +467,11 @@ void SidsGui::SeekObject(TKey *key)
         
         TH2D* histo2D=NULL;
         histo2D=(TH2D*)gDirectory->Get(obj->GetName());
-        
-        fSidsHisto=(TH2D*)gDirectory->Get(obj->GetName());
-        
+                
         if(histo2D) 
         {
             f2DHisto.push_back(new TH2D(*histo2D));
-            pic = gClient->GetPicture("h2_t.xpm");
-            item = fListTree->AddItem(fBaseLTI, f2DHisto[fHisto2DCounter]->GetName(), f2DHisto[fHisto2DCounter], pic, pic);
-            fListTree->SetToolTipItem(item, "2D Histogram");
-            item->SetDNDSource(kTRUE);
+            AddToListTree(f2DHisto[fHisto2DCounter]);
             fHisto2DCounter++;
         }
         
@@ -452,6 +494,53 @@ void SidsGui::SeekObject(TKey *key)
     
 }
 
+
+
+
+//______________________________________________________________________________
+int SidsGui::AddToListTree(TObject* obj)
+{
+    const TGPicture *pic = 0;
+    TGListTreeItem *item;
+
+    if ((strcmp(obj->IsA()->GetName(),"TProfile")!=0)
+            && (!obj->InheritsFrom("TH2"))
+            && (!obj->InheritsFrom("TH1"))  
+            ) 
+    {
+        printf("[Warning] Object %s is not an 1D or 2D histogram : "
+           "will not be added to the ListTree \n",obj->GetName()) ;
+        return 0;
+    }
+    //printf("Histo name:%s title:%s\n",obj->GetName(),obj->GetTitle());
+
+    
+    /// SEARCH FOR TH2
+    if(obj->InheritsFrom("TH2"))
+    {
+        pic = gClient->GetPicture("h2_t.xpm");
+        item = fListTree->AddItem(fBaseLTI, obj->GetName(), obj, pic, pic);
+        fListTree->SetToolTipItem(item, "2D Histogram");
+        item->SetDNDSource(kTRUE);
+        return 1;
+    }
+    
+    /// SEARCH FOR TH1
+    if(obj->InheritsFrom("TH1"))
+    {
+        pic = gClient->GetPicture("h1_t.xpm");
+        item = fListTree->AddItem(fBaseLTI, obj->GetName(), obj, pic, pic);
+        fListTree->SetToolTipItem(item, "1D Histogram");
+        item->SetDNDSource(kTRUE);
+        return 1;
+
+    }
+    
+    return 0;
+    
+    
+    
+}
 
 
 //______________________________________________________________________________
@@ -517,9 +606,9 @@ void SidsGui::DoCloseWindow()
 
    if (fGraph) { delete fGraph; fGraph = 0; }
    if (fHisto_px) { delete fHisto_px; fHisto_px = 0; }
-   if (fHistoP_py) { delete fHistoP_py; fHistoP_py = 0; }
-   if (fHistoD_py) { delete fHistoD_py; fHistoD_py = 0; }
-   if (fSidsHisto) { delete fSidsHisto; fSidsHisto = 0; }
+   if (fParentTrace) { delete fParentTrace; fParentTrace = 0; }
+   if (fDaughterTrace) { delete fDaughterTrace; fDaughterTrace = 0; }
+   if (fNEC) { delete fNEC; fNEC = 0; }
    fMenuFile->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
    fMenuHelp->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
    fButtonExit->Disconnect("Clicked()" , this, "CloseWindow()");
@@ -628,6 +717,7 @@ void SidsGui::DoDraw()
     //string fftSuffix("_fft");
     string histoID(fDetectorID);
     histoID+=mtpSuffix;
+    string histokickerID("Oscil");
     
     for(unsigned int i(0);i<f2DHisto.size();i++)
     {
@@ -638,42 +728,91 @@ void SidsGui::DoDraw()
 
             if(found!=std::string::npos)
             {
-                if(fHisto_px)
+                /*if(fHisto_px)
                 {
+                    f2DHisto[i]->GetXaxis()->UnZoom();
+                    f2DHisto[i]->GetYaxis()->UnZoom();
                     delete fHisto_px;
                     fHisto_px=NULL;
-                }
-                fHisto_px=f2DHisto[i]->ProjectionX();
-                Int_t binMax=fHisto_px->GetMaximumBin();
-                //Int_t binMax=f2DHisto[i]->ProjectionX()->GetMaximumBin();
+                }*/
+                //fHisto_px=f2DHisto[i]->ProjectionX();
+                //Int_t binMax=fHisto_px->GetMaximumBin();
+                Int_t binMax=f2DHisto[i]->ProjectionX()->GetMaximumBin();
+                Double_t XmaxBin=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax);
                 Double_t Xmin=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax-175);
                 Double_t Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax+175);
-                std::cout<<"Xmin : "<< Xmin<<std::endl;
-                std::cout<<"Xax : "<< Xmax<<std::endl;
+                //std::cout<<"Xmin : "<< Xmin<<std::endl;
+                //std::cout<<"Xax : "<< Xmax<<std::endl;
                 f2DHisto[i]->GetXaxis()->SetRangeUser(Xmin,Xmax);
                 
                 histoname+="_Rebinned";
 
+                fCanvas2->cd();
+    
                 TH2D* histo=dynamic_cast<TH2D*>(f2DHisto[i]->RebinX(2,histoname.c_str()));
                 if(histo)
                 {
                     //histo->SetMaximum(5.e-7);
                     histo->Draw("zcol");
                 }
+                
+                fCanvas2->Update();
+                
+                /// canvas1 PAD1 projection on frequency axis
+                fCanvas1->cd(1);
+                FindTraces(f2DHisto[i]);
+                
+                fHisto_px->Draw();
                 break;
             }
         }
     }
-        
     
-        
+   
     
+    /// canvas1 PAD2
+    fCanvas1->cd(2);
+    if(fParentTrace)
+        fParentTrace->Draw();
+    if(fDaughterTrace)
+    {
+        fDaughterTrace->SetLineColor(2);
+        fDaughterTrace->Draw("SAME");
+    }
     
-    fCanvas2->cd();
-    fCanvas2->Update();
+    /// canvas1 PAD3 Number of EC vs inj
+    fCanvas1->cd(3);
+    if(fNEC)
+        fNEC->Draw();
     
-    fCanvas1->cd();
-    fHisto_px->Draw();
+    /// canvas1 PAD4 kicker signals
+    fCanvas1->cd(4);
+    bool drawsame=false;
+    for(unsigned int i(0);i<f1DHisto.size();i++)
+    {
+        if(f1DHisto[i])
+        {
+            string histoname=string(f1DHisto[i]->GetName());
+            size_t found = histoname.find(histokickerID);
+
+            if(found!=std::string::npos)
+            {
+                if(drawsame)
+                {
+                    f1DHisto[i]->SetLineColor(i);
+                    f1DHisto[i]->Draw("SAME");
+                }
+                else
+                {
+                    f1DHisto[i]->SetLineColor(i);
+                    f1DHisto[i]->Draw();
+                    drawsame=true;
+                }
+                
+                
+            }
+        }
+    }
     
     fCanvas1->Update();
 }
@@ -875,7 +1014,87 @@ void SidsGui::DoValidate()
     //fSampler=true;
     if(fReadyToSend && fSampler)
         StartSampler();
+    
+    DoExit();
 }
+
+
+
+
+
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
+/// ////////////////////////////// Other function /////////////////////////////////
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t BinDist, Double_t sigma, Option_t* option, Double_t threshold)
+{
+    int Rebinning=20;
+    int NPeak2Search=2;
+    int NfounPeak=0;
+    hist2d->GetXaxis()->UnZoom();
+    hist2d->GetYaxis()->UnZoom();
+    
+    if(!fHisto_px)
+    {
+        fHisto_px=hist2d->ProjectionX();
+        AddToListTree(fHisto_px);
+    }
+    else
+    {
+        fHisto_px->GetXaxis()->UnZoom();
+        /*
+        delete fHisto_px;
+        fHisto_px=NULL;
+        fHisto_px=hist2d->ProjectionX();
+        */
+    }
+    
+    
+    TSpectrum *sp = new TSpectrum(NPeak2Search);
+    NfounPeak = sp->Search(fHisto_px,sigma,option,threshold);
+    Float_t *xpeaks = sp->GetPositionX();
+    fParentFreq=xpeaks[0];
+    int parentBin=fHisto_px->GetXaxis()->FindBin(fParentFreq);
+    //cout<<"xpeaks[0] = "<<xpeaks[0]<<endl;
+    
+    
+    if(!fParentTrace)
+    {
+        fParentTrace = hist2d->ProjectionY("Parent",parentBin-BinPWindow,parentBin+BinPWindow);
+        fParentTrace->Rebin(Rebinning);
+        AddToListTree(fParentTrace);
+    }
+    else
+    {
+        fParentTrace->GetXaxis()->UnZoom();
+        /*
+        delete fParentTrace;
+        fParentTrace=NULL;
+        fParentTrace = hist2d->ProjectionY("Parent",parentBin-BinPWindow,parentBin+BinPWindow);
+        fParentTrace->Rebin(Rebinning);
+        */
+    }
+    
+    if(!fDaughterTrace)
+    {
+        fDaughterTrace = hist2d->ProjectionY("Daughter",BinDist+parentBin-BinDWindow,BinDist+parentBin+BinDWindow);
+        fDaughterTrace->Rebin(Rebinning);
+        AddToListTree(fDaughterTrace);
+    }
+    else
+    {
+        fDaughterTrace->GetXaxis()->UnZoom();
+        /*
+        delete fDaughterTrace;
+        fDaughterTrace=NULL;
+        fDaughterTrace = hist2d->ProjectionY("Daughter",BinDist+parentBin-BinDWindow,BinDist+parentBin+BinDWindow);
+        fDaughterTrace->Rebin(Rebinning);
+        */
+    }
+                
+    
+}
+
 
 /// ////////////////////////////////////////////////////////////////////////////////////////////////
 /// ////////////////////////////// MQ function /////////////////////////////////

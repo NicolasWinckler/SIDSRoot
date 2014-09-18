@@ -83,7 +83,9 @@ public:
     int GetNDaughterEnd() {return fNd_end;}
     
     void SetNEC(int N) {fNEC=N;}
-    int GetNEC() {return fNEC;}
+    int GetNEC() {
+        fNEC=(int)fECDecayEvents.size();
+        return fNEC;}
     
     void SetCoolParentFreq(float f) {fCoolFreqP=f;}
     float GetCoolParentFreq() {return fCoolFreqP;}

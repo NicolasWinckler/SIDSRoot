@@ -69,7 +69,7 @@ Set(LIBRARY_NAME SidsVisualAna)
 If (Boost_FOUND)
   Set(DEPENDENCIES
     Base ParBase FairTools MCStack FairMQ FairMQSampler boost_thread 
-boost_system boost_serialization boost_filesystem RIO Cint Core Gui)
+boost_system boost_serialization boost_filesystem RIO Cint Core Gui Spectrum)
 EndIf (Boost_FOUND)
 
 GENERATE_LIBRARY()
