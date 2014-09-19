@@ -249,9 +249,10 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
     string treename=fParConfig.GetStringValue("TreeName");
     string branchname=fParConfig.GetStringValue("Branch");
     
-    cout<<"outputfilename= "<< outputfilename<< " treename= "<<treename <<" branchname= "<< branchname<<endl;
-    //*
+    
+    
     EsrTree DecayTree(outputfilename,treename,branchname);
+    //EsrTree *DecayTree = new EsrTree(outputfilename,treename,branchname);
     std::vector<EsrInjData> DataList=DecayTree.GetEsrData();
     
     int binNumber=(int)DataList.size();
@@ -261,7 +262,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
         int NumbEC=DataList[i].GetNEC();
         fNEC->SetBinContent(i+1,NumbEC);
     }//*/
-    
+    //delete DecayTree;
     
    //////////////////////////////////////////////////////
    

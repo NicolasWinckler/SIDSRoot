@@ -20,7 +20,7 @@
 class EsrTree 
 {
 public:
-    EsrTree(string filename, string treename, string branchname);
+    EsrTree(const string &filename, const string &treename, const string &branchname);
     virtual ~EsrTree();
     
     void UpdateTree(EsrInjData EsrData);

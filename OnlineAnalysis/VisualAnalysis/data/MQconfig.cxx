@@ -150,7 +150,7 @@ void MQconfig::SetStringValue(string key, string Value)
 
 double MQconfig::GetDoubleValue(string key)
 {
-    double val;
+    double val(0.);
     if(fParameterDoubleValues.count(key))
         val=fParameterDoubleValues.at(key);
     else
@@ -163,7 +163,7 @@ double MQconfig::GetDoubleValue(string key)
 
 float MQconfig::GetFloatValue(string key)
 {
-    float val;
+    float val(0.);
     if(fParameterFloatValues.count(key))
         val=fParameterFloatValues.at(key);
     else
@@ -176,7 +176,7 @@ float MQconfig::GetFloatValue(string key)
 
 int MQconfig::GetIntValue(string key)
 {
-    int val;
+    int val(0);
     if(fParameterIntValues.count(key))
         val=fParameterIntValues.at(key);
     else

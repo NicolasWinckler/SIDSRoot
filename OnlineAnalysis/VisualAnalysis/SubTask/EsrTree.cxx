@@ -7,12 +7,12 @@
 
 #include "EsrTree.h"
 
-EsrTree::EsrTree(string filename, string treename, string branchname) : 
+EsrTree::EsrTree(const string &filename, const string &treename, const string &branchname) : 
         fFileName(filename), 
         fTreeName(treename),
         fBranchName(branchname),
         fOutFile(new TFile(fFileName.c_str(),"UPDATE")), 
-        fTree(NULL)
+        fTree(NULL), fEsrData(NULL)
 {
     
 }
