@@ -170,7 +170,7 @@ private:
     int fHeaderCounter;
     bool fReadyToSend;
     bool fSampler;
-    MQconfig fSamplerConfig;
+    MQconfig fParConfig;
    ClassDef(SidsGui, 0); // Mainframe for Drag and Drop demo
 };
 

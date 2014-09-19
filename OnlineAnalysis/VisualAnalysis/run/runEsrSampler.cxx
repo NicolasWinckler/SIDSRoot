@@ -42,50 +42,60 @@ int main(int argc, char** argv)
     MQconfig SamplerConfig;
 
     int i = 1;
-    SamplerConfig.SetID(argv[i]);
+    SamplerConfig.SetStringValue("ID",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetInputFile(argv[i]);
+    SamplerConfig.SetStringValue("InputFile",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetUserName(argv[i]);
+    SamplerConfig.SetStringValue("UserName",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetTreeName(argv[i]);
+    SamplerConfig.SetStringValue("TreeName",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetBranch(argv[i]);
+    SamplerConfig.SetStringValue("Branch",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetOutputFile(argv[i]);
+    SamplerConfig.SetStringValue("OutputFile",string(argv[i]));
     ++i;
     
     int eventRate;
     stringstream(argv[i]) >> eventRate;
-    SamplerConfig.SetEventRate(eventRate);
+    SamplerConfig.SetIntValue("EventRate",eventRate);
     ++i;
 
     int numIoThreads;
     stringstream(argv[i]) >> numIoThreads;
-    SamplerConfig.SetNumIoThreads(numIoThreads);
+    SamplerConfig.SetIntValue("NumIoThreads",numIoThreads);
     ++i;
     
-    SamplerConfig.SetNumInputs(0);
-    SamplerConfig.SetNumOutputs(1);
+    SamplerConfig.SetIntValue("NumInputs",0);
+    SamplerConfig.SetIntValue("NumOutputs",1);
 
-    SamplerConfig.SetOutputSocketType(argv[i]);
+    SamplerConfig.SetStringValue("OutputSocketType",string(argv[i]));
     ++i;
     int outputSndBufSize;
     stringstream(argv[i]) >> outputSndBufSize;
-    SamplerConfig.SetOutputSndBufSize(outputSndBufSize);
+    SamplerConfig.SetIntValue("OutputSndBufSize",outputSndBufSize);
 
     ++i;
-    SamplerConfig.SetOutputMethod(argv[i]);
+    SamplerConfig.SetStringValue("OutputMethod",string(argv[i]));
     ++i;
-    SamplerConfig.SetOutputAddress(argv[i]);
+    SamplerConfig.SetStringValue("OutputAddress",string(argv[i]));
     ++i;
 
 
+    
+    SamplerConfig.SetIntValue("BinDistancePDfreq",52);
+    SamplerConfig.SetIntValue("BinPWindow",10);
+    SamplerConfig.SetIntValue("BinDWindow",10);
+    SamplerConfig.SetIntValue("BinningTraces",10);
+    SamplerConfig.SetIntValue("BinningFreq2dHisto",2);
+    SamplerConfig.SetDoubleValue("BinSigmaPeak",10);
+    SamplerConfig.SetDoubleValue("ThresholdPeak",10);
+    
+    
     TApplication app("App", &argc, argv);
     MQLOG(INFO)<<"Run start";
     SidsGui* fSidsAnalysisGui = new SidsGui(gClient->GetRoot(), 1000, 600, SamplerConfig);

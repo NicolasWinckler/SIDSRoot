@@ -61,7 +61,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
         fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.), fDecayCounter(0), 
         fHisto1DCounter(0), fHisto2DCounter(0),fHeaderCounter(0),
         fReadyToSend(false), fSampler(false),
-        fSamplerConfig(SamplerConfig)
+        fParConfig(SamplerConfig)
 
 {
    // Constructor.
@@ -118,7 +118,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
       rootsys.Remove(0, 3);
 #endif
    
-    fFileName=fSamplerConfig.GetInputFile().c_str();
+    fFileName=fParConfig.GetStringValue("InputFile").c_str();
     TFile* rootfile0 = new TFile(fFileName);
     RootFileManager(rootfile0);
    
@@ -245,9 +245,12 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
 
     ////////////////////////////////////////////////////// load number of EC histogram
     
-    string outputfilename=fSamplerConfig.GetOutputFile();
-    string treename=fSamplerConfig.GetTreeName();
-    string branchname=fSamplerConfig.GetBranch();
+    string outputfilename=fParConfig.GetStringValue("OutputFile");
+    string treename=fParConfig.GetStringValue("TreeName");
+    string branchname=fParConfig.GetStringValue("Branch");
+    
+    cout<<"outputfilename= "<< outputfilename<< " treename= "<<treename <<" branchname= "<< branchname<<endl;
+    //*
     EsrTree DecayTree(outputfilename,treename,branchname);
     std::vector<EsrInjData> DataList=DecayTree.GetEsrData();
     
@@ -257,7 +260,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
     {
         int NumbEC=DataList[i].GetNEC();
         fNEC->SetBinContent(i+1,NumbEC);
-    }
+    }//*/
     
     
    //////////////////////////////////////////////////////
@@ -713,11 +716,25 @@ void SidsGui::DataDropped(TGListTreeItem *, TDNDData *data)
 void SidsGui::DoDraw() 
 {
     
-    string mtpSuffix("_mtpsd6");
+    string Suffix;
+    string histokickerID;
     //string fftSuffix("_fft");
+    if(!fParConfig.GetStringValue("DetectorID").empty())
+        fDetectorID=fParConfig.GetStringValue("DetectorID");
+    
+    if(!fParConfig.GetStringValue("DetectorSuffix").empty())
+        Suffix=fParConfig.GetStringValue("DetectorSuffix");
+    else
+        Suffix="_mtpsd6";
+    
     string histoID(fDetectorID);
-    histoID+=mtpSuffix;
-    string histokickerID("Oscil");
+    histoID+=Suffix;
+    
+    if(!fParConfig.GetStringValue("KickerPrefix").empty())
+        histokickerID=fParConfig.GetStringValue("KickerPrefix");
+    else
+        histokickerID="Oscil";
+    
     
     for(unsigned int i(0);i<f2DHisto.size();i++)
     {
@@ -738,7 +755,6 @@ void SidsGui::DoDraw()
                 //fHisto_px=f2DHisto[i]->ProjectionX();
                 //Int_t binMax=fHisto_px->GetMaximumBin();
                 Int_t binMax=f2DHisto[i]->ProjectionX()->GetMaximumBin();
-                Double_t XmaxBin=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax);
                 Double_t Xmin=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax-175);
                 Double_t Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax+175);
                 //std::cout<<"Xmin : "<< Xmin<<std::endl;
@@ -979,7 +995,7 @@ void SidsGui::DoValidate()
         
     
     EsrInjData DecayData(fFileName.Data(),detectorID,timeresolution,freqresolution,freqoffset);
-    DecayData.SetUserName(fSamplerConfig.GetUserName());
+    DecayData.SetUserName(fParConfig.GetStringValue("UserName"));
     DecayData.SetQualityTag(fFileQualityTag->GetTag());
     DecayData.SetFileComment(fFileQualityTag->GetComment());
     
@@ -1005,9 +1021,9 @@ void SidsGui::DoValidate()
         DecayList[i].PrintEvent();        
     }
 
-    string outputfilename=fSamplerConfig.GetOutputFile();
-    string treename=fSamplerConfig.GetTreeName();
-    string branchname=fSamplerConfig.GetBranch();
+    string outputfilename=fParConfig.GetStringValue("OutputFile");
+    string treename=fParConfig.GetStringValue("TreeName");
+    string branchname=fParConfig.GetStringValue("Branch");
     EsrTree DecayTree(outputfilename,treename,branchname);
     DecayTree.UpdateTree(DecayData);
     //fReadyToSend=true;
@@ -1121,13 +1137,13 @@ void SidsGui::StartSampler()
     sampler.SetTransport(transportFactory);
 
 
-    sampler.SetProperty(EsrSidsSampler<TLoader>::Id, fSamplerConfig.GetID().c_str());
-    sampler.SetProperty(EsrSidsSampler<TLoader>::InputFile, fSamplerConfig.GetInputFile().c_str());
-    sampler.SetProperty(EsrSidsSampler<TLoader>::EventRate, fSamplerConfig.GetEventRate());
-    sampler.SetProperty(EsrSidsSampler<TLoader>::NumIoThreads, fSamplerConfig.GetNumIoThreads());
+    sampler.SetProperty(EsrSidsSampler<TLoader>::Id, fParConfig.GetStringValue("ID").c_str());
+    sampler.SetProperty(EsrSidsSampler<TLoader>::InputFile, fParConfig.GetStringValue("InputFile").c_str());
+    sampler.SetProperty(EsrSidsSampler<TLoader>::EventRate, fParConfig.GetIntValue("EventRate"));
+    sampler.SetProperty(EsrSidsSampler<TLoader>::NumIoThreads, fParConfig.GetIntValue("NumIoThreads"));
 
-    sampler.SetProperty(EsrSidsSampler<TLoader>::NumInputs, fSamplerConfig.GetNumInputs());
-    sampler.SetProperty(EsrSidsSampler<TLoader>::NumOutputs, fSamplerConfig.GetNumOutputs());
+    sampler.SetProperty(EsrSidsSampler<TLoader>::NumInputs, fParConfig.GetIntValue("NumInputs"));
+    sampler.SetProperty(EsrSidsSampler<TLoader>::NumOutputs, fParConfig.GetIntValue("NumOutputs"));
 
     sampler.ChangeState(EsrSidsSampler<TLoader>::INIT);
 
@@ -1137,10 +1153,10 @@ void SidsGui::StartSampler()
     // sampler.SetProperty(EsrSidsSampler::InputAddress, "tcp://localhost:5560", 0);
 
     // OUTPUT: 0 - data
-    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputSocketType, fSamplerConfig.GetOutputSocketType().c_str(), 0);
-    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputSndBufSize, fSamplerConfig.GetOutputSndBufSize(), 0);
-    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputMethod, fSamplerConfig.GetOutputMethod().c_str(), 0);
-    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputAddress, fSamplerConfig.GetOutputAddress().c_str(), 0);
+    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputSocketType, fParConfig.GetStringValue("OutputSocketType").c_str(), 0);
+    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputSndBufSize, fParConfig.GetIntValue("OutputSndBufSize"), 0);
+    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputMethod, fParConfig.GetStringValue("OutputMethod").c_str(), 0);
+    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputAddress, fParConfig.GetStringValue("OutputAddress").c_str(), 0);
 
     
     

@@ -88,10 +88,6 @@ public:
     void SetIntValue(string key, int Value);
     void SetStringValue(string key, string Value);
     
-    void CheckSKey(string StringKey);
-    void CheckDKey(string DoubleKey);
-    void CheckFKey(string FloatKey);
-    void CheckIKey(string IntKey);
     
     
     
@@ -122,6 +118,14 @@ protected:
     vector<string> fKeyDoubleValues;
     vector<string> fKeyFloatValues;
     vector<string> fKeyStringValues;
+    
+    
+    template<class T> void PrintAvailKey(T mymap)
+    {
+        cout<<"[INFO] Available keys in map are:"<<endl;
+        for(auto p : mymap)
+            cout<<"[INFO] "<<p.first<<' '<<p.second<<endl;
+    }
     
 };
 
