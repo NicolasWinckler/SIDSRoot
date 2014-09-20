@@ -27,14 +27,17 @@ using std::stringstream;
 
 int main(int argc, char** argv)
 {
-    if (argc != 13)
+    if (argc != 23)
     {
-        MQLOG(ERROR)<<"Number of argument incorrect.";
+        MQLOG(ERROR)<<"Number of argument incorrect. ("<<argc<<" instead of 23)";
         MQLOG(INFO) <<"Script usage: startVisualAnalysis \t userName inputFile \n";
         MQLOG(INFO) << "Binary usage: EsrSidsSampler$dataFormat \tID inputFile \n"
-             <<"\t\t userName treeName branch outputFile\n"
+             << "\t\t userName treeName branch outputFile\n"
              << "\t\t eventRate numIoTreads\n"
-             << "\t\toutputSocketType outputSndBufSize outputMethod outputAddress\n" << endl;
+             << "\t\toutputSocketType outputSndBufSize outputMethod outputAddress\n"
+             << "\t\t binDistancePDfreq binPWindow binDWindow binningTraces binningFreq2dHisto\n" 
+             << "\t\t binSigmaPeak thresholdPeak detectorID detectorSuffix kickerPrefix\n"   
+                << endl;
         return 1;
     }
 
@@ -42,58 +45,91 @@ int main(int argc, char** argv)
     MQconfig SamplerConfig;
 
     int i = 1;
-    SamplerConfig.SetStringValue("ID",string(argv[i]));
+    SamplerConfig.SetValue("ID",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetStringValue("InputFile",string(argv[i]));
+    SamplerConfig.SetValue("InputFile",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetStringValue("UserName",string(argv[i]));
+    SamplerConfig.SetValue("UserName",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetStringValue("TreeName",string(argv[i]));
+    SamplerConfig.SetValue("TreeName",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetStringValue("Branch",string(argv[i]));
+    SamplerConfig.SetValue("Branch",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetStringValue("OutputFile",string(argv[i]));
+    SamplerConfig.SetValue("OutputFile",string(argv[i]));
     ++i;
     
     int eventRate;
     stringstream(argv[i]) >> eventRate;
-    SamplerConfig.SetIntValue("EventRate",eventRate);
+    SamplerConfig.SetValue("EventRate",eventRate);
     ++i;
 
     int numIoThreads;
     stringstream(argv[i]) >> numIoThreads;
-    SamplerConfig.SetIntValue("NumIoThreads",numIoThreads);
+    SamplerConfig.SetValue("NumIoThreads",numIoThreads);
     ++i;
     
-    SamplerConfig.SetIntValue("NumInputs",0);
-    SamplerConfig.SetIntValue("NumOutputs",1);
+    SamplerConfig.SetValue("NumInputs",0);
+    SamplerConfig.SetValue("NumOutputs",1);
 
-    SamplerConfig.SetStringValue("OutputSocketType",string(argv[i]));
+    SamplerConfig.SetValue("OutputSocketType",string(argv[i]));
     ++i;
     int outputSndBufSize;
     stringstream(argv[i]) >> outputSndBufSize;
-    SamplerConfig.SetIntValue("OutputSndBufSize",outputSndBufSize);
+    SamplerConfig.SetValue("OutputSndBufSize",outputSndBufSize);
 
     ++i;
-    SamplerConfig.SetStringValue("OutputMethod",string(argv[i]));
+    SamplerConfig.SetValue("OutputMethod",string(argv[i]));
     ++i;
-    SamplerConfig.SetStringValue("OutputAddress",string(argv[i]));
+    SamplerConfig.SetValue("OutputAddress",string(argv[i]));
     ++i;
 
 
+    //13
+    int BinDistancePDfreq;
+    stringstream(argv[i]) >> BinDistancePDfreq;
+    SamplerConfig.SetValue("BinDistancePDfreq",BinDistancePDfreq);
+    ++i;
     
-    SamplerConfig.SetIntValue("BinDistancePDfreq",52);
-    SamplerConfig.SetIntValue("BinPWindow",10);
-    SamplerConfig.SetIntValue("BinDWindow",10);
-    SamplerConfig.SetIntValue("BinningTraces",10);
-    SamplerConfig.SetIntValue("BinningFreq2dHisto",2);
-    SamplerConfig.SetDoubleValue("BinSigmaPeak",10);
-    SamplerConfig.SetDoubleValue("ThresholdPeak",10);
+    int BinPWindow;
+    stringstream(argv[i]) >> BinPWindow;
+    SamplerConfig.SetValue("BinPWindow",BinPWindow);
+    ++i;
+    
+    int BinDWindow;
+    stringstream(argv[i]) >> BinDWindow;
+    SamplerConfig.SetValue("BinDWindow",BinDWindow);
+    ++i;
+    
+    int BinningTraces;
+    stringstream(argv[i]) >> BinningTraces;
+    SamplerConfig.SetValue("BinningTraces",BinningTraces);
+    ++i;
+    
+    int BinningFreq2dHisto;
+    stringstream(argv[i]) >> BinningFreq2dHisto;
+    SamplerConfig.SetValue("BinningFreq2dHisto",BinningFreq2dHisto);
+    ++i;
+    
+    double BinSigmaPeak;
+    stringstream(argv[i]) >> BinSigmaPeak;
+    SamplerConfig.SetValue("BinSigmaPeak",BinSigmaPeak);
+    ++i;
+    
+    double ThresholdPeak;
+    stringstream(argv[i]) >> ThresholdPeak;
+    SamplerConfig.SetValue("ThresholdPeak",ThresholdPeak);
+    ++i;
+    SamplerConfig.SetValue("DetectorID",string(argv[i]));
+    ++i;
+    SamplerConfig.SetValue("DetectorSuffix",string(argv[i]));
+    ++i;
+    SamplerConfig.SetValue("KickerPrefix",string(argv[i]));
+    ++i;
     
     
     TApplication app("App", &argc, argv);

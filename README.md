@@ -110,4 +110,27 @@ Single Ion Decay Spectroscopy package for the online/offline data analysis of th
   ```bash
   outputFile="/SAT/hera/sids/decayresults/SIDSDecayData.root"
   ```
-  Notes : Do not modify anything else in the script unless you know what you are doing.
+  
+  Other parameter of interest:
+
+  ```bash
+    binDistancePDfreq="52"    # distance in bin between parent and daughter freq
+    binPWindow="10"           # half projection window (parent)
+    binDWindow="10"           # half projection window (daughter)
+    binningTraces="20"        # Rebinning of parent and daughter traces
+    binningFreq2dHisto="2"    # Rebinning w.r.t freq of the 2D histogram
+    binSigmaPeak="4.0"        # sigma (in bin) of peaks
+    thresholdPeak="0.2"       # threshold for peak detection
+    detectorID="RSA51"        # "RSA51", "RSA52", or "RSA30"
+  ```
+
+The rest of the parameters should not be changed
+
+
+### Todo list
+
+
+
+
+
+

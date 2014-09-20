@@ -61,10 +61,24 @@ void EsrTree::UpdateTree(EsrInjData EsrData)
 std::vector<EsrInjData> EsrTree::GetEsrData()
 {
     std::vector<EsrInjData> DataList;
-    if(	!fOutFile->IsOpen())
+    if(fOutFile)
+    {
+        if(fOutFile->IsOpen())
+        {
+            fOutFile->Close();
+            delete fOutFile;
+            fOutFile=NULL;
+            fOutFile = new TFile(fFileName.c_str(),"READ");
+        }
+        else
+        {
+            delete fOutFile;
+            fOutFile=NULL;
+            fOutFile = new TFile(fFileName.c_str(),"READ");
+        }
+    }
+    else
         fOutFile = new TFile(fFileName.c_str(),"READ");
-    
-    
     fTree=(TTree*)fOutFile->Get(fTreeName.c_str());
     if(fTree)
     {
@@ -74,7 +88,6 @@ std::vector<EsrInjData> EsrTree::GetEsrData()
             fTree->GetEntry(i);
             EsrInjData Data_i=*fEsrData;
             DataList.push_back(Data_i);
-            
         }
     }
     fOutFile->Close();

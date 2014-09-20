@@ -26,7 +26,6 @@ ${SIDS_SOURCE_DIR}/time2root
 
 include_directories(${INCLUDE_DIRECTORIES})
 
-
 If (Boost_FOUND)
   configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/startEsrSampler.sh.in ${SIDS_BINARY_DIR}/bin/startEsrSampler.sh )
   configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/startEsrSink.sh.in ${SIDS_BINARY_DIR}/bin/startEsrSink.sh )
@@ -47,7 +46,6 @@ Set(SRCS
     data/EsrDecayEvent.cxx
     data/EsrBinDecayEvent.cxx
     data/EsrInjData.cxx
-    data/MQconfig.cxx
     SubTask/EsrTree.cxx
     GUI/SidsGui.cxx
     GUI/SidsDecayTxtField.cxx
@@ -57,6 +55,7 @@ Set(SRCS
 
 If (Boost_FOUND)
   Set(NO_DICT_SRCS
+    data/MQconfig.cxx
     MQDevice/EsrSidsSampler.cxx
     MQDevice/EsrFileSink.cxx
     MQTask/EsrSamplerTask.cxx

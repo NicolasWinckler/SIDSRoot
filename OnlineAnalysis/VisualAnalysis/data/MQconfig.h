@@ -16,8 +16,18 @@
 #include <sstream>
 #include <fstream>
 #include <stdlib.h>
+#include <list>
 
 using namespace std;
+#ifndef __CINT__
+#include <boost/any.hpp>
+using boost::any_cast;
+typedef boost::any any;
+typedef map<string,any> many;
+#endif
+
+
+
 
 class MQconfig 
 {
@@ -26,93 +36,70 @@ public:
     virtual ~MQconfig();
     
     
+#ifndef __CINT__
+    void SetValue(const string & key, const any & Value)
+    {
+        if(fContainer.count(key))
+            fContainer[key]=Value;
+        else
+        {
+            cout<<"[ERROR] given key "<< key <<" is not defined. "<<endl;
+            PrintAvailKeys(fContainer);
+        }
+    }
     
-    string GetID() const { return fID;}
-    void SetID(string ID) { fID=ID;}
-    
-    string GetUserName() const { return fUserName;}
-    void SetUserName(string UserName) {fUserName=UserName;}
-    
-    string GetInputFile() const { return fInputFile;}
-    void SetInputFile(string InputFile) {fInputFile=InputFile;}
-    
-    string GetOutputFile() const { return fOutputFile;}
-    void SetOutputFile(string OutputFile) {fOutputFile=OutputFile;}
-    
-    string GetTreeName() const { return fTreeName;}
-    void SetTreeName(string TreeName) {fTreeName=TreeName;}
-    
-    string GetParameterFile() const { return fParameterFile;}
-    void SetParameterFile(string ParameterFile) { fParameterFile=ParameterFile;}
-    
-    string GetBranch() const { return fBranch;}
-    void SetBranch(string Branch) { fBranch=Branch;}
-    
-    int GetEventRate() const { return fEventRate;}
-    void SetEventRate(int EventRate) { fEventRate=EventRate;}
-    
-    int GetNumIoThreads() const { return fNumIoThreads;}
-    void SetNumIoThreads(int NumIoThreads) { fNumIoThreads=NumIoThreads;}
-    
-    int GetNumInputs() const { return fNumInputs;}
-    void SetNumInputs(int NumInputs) { fNumInputs=NumInputs;}
-    
-    int GetNumOutputs() const { return fNumOutputs;}
-    void SetNumOutputs(int NumOutputs) { fNumOutputs=NumOutputs;}
-    
-    string GetOutputSocketType() const { return fOutputSocketType;}
-    void SetOutputSocketType(string OutputSocketType) { fOutputSocketType=OutputSocketType;}
-    
-    int GetOutputSndBufSize() const { return fOutputSndBufSize;}
-    void SetOutputSndBufSize(int OutputSndBufSize) { fOutputSndBufSize=OutputSndBufSize;}
-    
-    string GetOutputMethod() const { return fOutputMethod;}
-    void SetOutputMethod(string OutputMethod) { fOutputMethod=OutputMethod;}
-    
-    string GetOutputAddress() const { return fOutputAddress;}
-    void SetOutputAddress(string OutputAddress) { fOutputAddress=OutputAddress;}
-    
-    string GetPayloadFormat() const { return fPayloadFormat;}
-    void SetPayloadFormat(string PayloadFormat) { fPayloadFormat=PayloadFormat;}
+    template<class T> T GetValue(const string & key)
+    {
+        T val;
+        if(!is_empty(fContainer[key]))
+        {
+            if(is_int(fContainer[key]) 
+                    || is_double(fContainer[key])
+                    || is_float(fContainer[key])
+                    || is_char_ptr(fContainer[key])
+                    || is_string(fContainer[key]))
+                val=Convert<T>(key);
+            else
+            {
+                cout<<"[ERROR] type not supported"<<endl;
+               
+            }
+        }
+        else
+            cout<<"[ERROR] key "<<key <<" is empty"<<endl;
+        return val;
+    }
     
     
+    string GetStringVal(const string & key)
+    {
+        string val;
+        if(is_string(fContainer[key]))
+            val=Convert<string>(key);
+        return val;
+    }
     
-    double GetDoubleValue(string key);
-    float GetFloatValue(string key);
-    int GetIntValue(string key);
-    string GetStringValue(string key);
+    int GetIntVal(const string & key)
+    {
+        int val=0;
+        if(is_int(fContainer[key]))
+            val=Convert<int>(key);
+        return val;
+    }
     
+    double GetDoubleVal(const string & key)
+    {
+        double val=0.0;
+        
+        if(is_double(fContainer[key]))
+            val=Convert<double>(key);
+        return val;
+    }
     
-    void SetDoubleValue(string key, double Value);
-    void SetFloatValue(string key, float Value);
-    void SetIntValue(string key, int Value);
-    void SetStringValue(string key, string Value);
-    
-    
-    
+#endif
     
 protected:
-    string fID;
-    string fUserName;
-    string fInputFile;
-    string fOutputFile;
-    string fTreeName;
-    string fParameterFile;
-    string fBranch;
-    int fEventRate;
-    int fNumIoThreads;
-    int fNumInputs;
-    int fNumOutputs;
-    string fOutputSocketType;
-    int fOutputSndBufSize;
-    string fOutputMethod;
-    string fOutputAddress;
-    string fPayloadFormat;
     
-    map<string, int> fParameterIntValues;
-    map<string, double> fParameterDoubleValues;
-    map<string, float> fParameterFloatValues;
-    map<string, string> fParameterStringValues;
     
     vector<string> fKeyIntValues;
     vector<string> fKeyDoubleValues;
@@ -120,13 +107,97 @@ protected:
     vector<string> fKeyStringValues;
     
     
-    template<class T> void PrintAvailKey(T mymap)
+    template<class U> void PrintAvailKey(U mymap)
     {
         cout<<"[INFO] Available keys in map are:"<<endl;
         for(auto p : mymap)
             cout<<"[INFO] "<<p.first<<' '<<p.second<<endl;
     }
     
+    
+#ifndef __CINT__
+    many fContainer;
+    void PrintAvailKeys(many mymap)
+    {
+        cout<<"[INFO] Available keys in map are:"<<endl;
+        for(auto p : mymap)
+        {
+            cout<<"[INFO] ";
+            
+            string key=any_cast<string>(p.first);
+            cout<<key<<" = ";
+            
+            if(is_int(p.second))
+                cout<<any_cast<int>(p.second);
+            
+            if(is_string(p.second))
+                cout<<any_cast<string>(p.second);
+            
+            if(is_double(p.second))
+                cout<<any_cast<double>(p.second);
+            
+            
+            cout<<endl;
+        }
+    }
+    
+    template<class T> T Convert(const string & key)
+    {
+        T val;
+        if(fContainer.count(key))
+        {
+            val=any_cast<T>(fContainer[key]);
+            //cout<<"Key "<<key<<" has value "<<val<<endl;
+        }
+        else
+        {
+            cout<<"[ERROR] given key "<< key <<" is not defined. "<<endl;
+            PrintAvailKeys(fContainer);
+        }
+        
+        return val;
+    }
+    
+    
+    bool is_empty(const any & operand)
+    {
+        return operand.empty();
+    }
+
+    bool is_int(const any & operand)
+    {
+        return operand.type() == typeid(int);
+    }
+
+    bool is_double(const any & operand)
+    {
+        return operand.type() == typeid(double);
+    }
+    
+    bool is_float(const any & operand)
+    {
+        return operand.type() == typeid(float);
+    }
+    
+    bool is_char_ptr(const any & operand)
+    {
+        try
+        {
+            any_cast<const char *>(operand);
+            return true;
+        }
+        catch(const boost::bad_any_cast &)
+        {
+            return false;
+        }
+    }
+    
+    bool is_string(const any & operand)
+    {
+        return any_cast<string>(&operand);
+    }
+    
+#endif//cint
 };
 
 #endif	/* MQCONFIG_H */

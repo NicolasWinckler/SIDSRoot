@@ -118,7 +118,10 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
       rootsys.Remove(0, 3);
 #endif
    
-    fFileName=fParConfig.GetStringValue("InputFile").c_str();
+   
+   string name=fParConfig.GetValue<string>("InputFile");
+   cout<<"name="<<name<<endl;
+    fFileName=name.c_str();
     TFile* rootfile0 = new TFile(fFileName);
     RootFileManager(rootfile0);
    
@@ -245,9 +248,9 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
 
     ////////////////////////////////////////////////////// load number of EC histogram
     
-    string outputfilename=fParConfig.GetStringValue("OutputFile");
-    string treename=fParConfig.GetStringValue("TreeName");
-    string branchname=fParConfig.GetStringValue("Branch");
+    string outputfilename=fParConfig.GetValue<string>("OutputFile");
+    string treename=fParConfig.GetValue<string>("TreeName");
+    string branchname=fParConfig.GetValue<string>("Branch");
     
     
     
@@ -378,6 +381,7 @@ int SidsGui::RootFileManager(TFile* rootfile)
     if (!rootfile->IsOpen()) 
     {
       std::cout<<"[ERROR] Cannot open file "<<fFileName.Data()<<std::endl;
+      
       return 0;
     }
 
@@ -557,17 +561,15 @@ void SidsGui::HandleMenu(Int_t menu_id)
 
    switch (menu_id) {
       case M_FILE_EXIT:
+      {
          // close the window and quit application
          DoCloseWindow();
          gApplication->Terminate(0);
          break;
+      }
       case M_FILE_OPEN:
       {
-         
          OpenRootFile();
-         //std::cout<<"dir="<<dir<<std::endl;
-         //std::cout<<"file="<<fi.fFilename <<std::endl;
-         // doesn't do much, but can be used to open a root file...
          break;
       }
       case M_FILE_BROWSE:
@@ -720,19 +722,19 @@ void SidsGui::DoDraw()
     string Suffix;
     string histokickerID;
     //string fftSuffix("_fft");
-    if(!fParConfig.GetStringValue("DetectorID").empty())
-        fDetectorID=fParConfig.GetStringValue("DetectorID");
+    if(!fParConfig.GetValue<string>("DetectorID").empty())
+        fDetectorID=fParConfig.GetValue<string>("DetectorID");
     
-    if(!fParConfig.GetStringValue("DetectorSuffix").empty())
-        Suffix=fParConfig.GetStringValue("DetectorSuffix");
+    if(!fParConfig.GetValue<string>("DetectorSuffix").empty())
+        Suffix=fParConfig.GetValue<string>("DetectorSuffix");
     else
         Suffix="_mtpsd6";
     
     string histoID(fDetectorID);
     histoID+=Suffix;
     
-    if(!fParConfig.GetStringValue("KickerPrefix").empty())
-        histokickerID=fParConfig.GetStringValue("KickerPrefix");
+    if(!fParConfig.GetValue<string>("KickerPrefix").empty())
+        histokickerID=fParConfig.GetValue<string>("KickerPrefix");
     else
         histokickerID="Oscil";
     
@@ -777,7 +779,15 @@ void SidsGui::DoDraw()
                 
                 /// canvas1 PAD1 projection on frequency axis
                 fCanvas1->cd(1);
-                FindTraces(f2DHisto[i]);
+                
+                Int_t BinPWindow=fParConfig.GetValue<int>("BinPWindow"); 
+                Int_t BinDWindow=fParConfig.GetValue<int>("BinDWindow"); 
+                Int_t BinDist=fParConfig.GetValue<int>("BinDistancePDfreq"); 
+                Double_t sigma=fParConfig.GetValue<double>("BinSigmaPeak");
+                Double_t threshold=fParConfig.GetValue<double>("ThresholdPeak");
+                
+                
+                FindTraces(f2DHisto[i],BinPWindow,BinDWindow,BinDist,sigma,"",threshold);
                 
                 fHisto_px->Draw();
                 break;
@@ -996,7 +1006,7 @@ void SidsGui::DoValidate()
         
     
     EsrInjData DecayData(fFileName.Data(),detectorID,timeresolution,freqresolution,freqoffset);
-    DecayData.SetUserName(fParConfig.GetStringValue("UserName"));
+    DecayData.SetUserName(fParConfig.GetValue<string>("UserName"));
     DecayData.SetQualityTag(fFileQualityTag->GetTag());
     DecayData.SetFileComment(fFileQualityTag->GetComment());
     
@@ -1022,9 +1032,9 @@ void SidsGui::DoValidate()
         DecayList[i].PrintEvent();        
     }
 
-    string outputfilename=fParConfig.GetStringValue("OutputFile");
-    string treename=fParConfig.GetStringValue("TreeName");
-    string branchname=fParConfig.GetStringValue("Branch");
+    string outputfilename=fParConfig.GetValue<string>("OutputFile");
+    string treename=fParConfig.GetValue<string>("TreeName");
+    string branchname=fParConfig.GetValue<string>("Branch");
     EsrTree DecayTree(outputfilename,treename,branchname);
     DecayTree.UpdateTree(DecayData);
     //fReadyToSend=true;
@@ -1045,7 +1055,8 @@ void SidsGui::DoValidate()
 //______________________________________________________________________________
 void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t BinDist, Double_t sigma, Option_t* option, Double_t threshold)
 {
-    int Rebinning=20;
+    int Rebinning=fParConfig.GetValue<int>("BinningTraces");
+    cout<<"REBINNING="<<Rebinning<<endl;
     int NPeak2Search=2;
     int NfounPeak=0;
     hist2d->GetXaxis()->UnZoom();
@@ -1138,13 +1149,13 @@ void SidsGui::StartSampler()
     sampler.SetTransport(transportFactory);
 
 
-    sampler.SetProperty(EsrSidsSampler<TLoader>::Id, fParConfig.GetStringValue("ID").c_str());
-    sampler.SetProperty(EsrSidsSampler<TLoader>::InputFile, fParConfig.GetStringValue("InputFile").c_str());
-    sampler.SetProperty(EsrSidsSampler<TLoader>::EventRate, fParConfig.GetIntValue("EventRate"));
-    sampler.SetProperty(EsrSidsSampler<TLoader>::NumIoThreads, fParConfig.GetIntValue("NumIoThreads"));
+    sampler.SetProperty(EsrSidsSampler<TLoader>::Id, fParConfig.GetValue<string>("ID").c_str());
+    sampler.SetProperty(EsrSidsSampler<TLoader>::InputFile, fParConfig.GetValue<string>("InputFile").c_str());
+    sampler.SetProperty(EsrSidsSampler<TLoader>::EventRate, fParConfig.GetValue<int>("EventRate"));
+    sampler.SetProperty(EsrSidsSampler<TLoader>::NumIoThreads, fParConfig.GetValue<int>("NumIoThreads"));
 
-    sampler.SetProperty(EsrSidsSampler<TLoader>::NumInputs, fParConfig.GetIntValue("NumInputs"));
-    sampler.SetProperty(EsrSidsSampler<TLoader>::NumOutputs, fParConfig.GetIntValue("NumOutputs"));
+    sampler.SetProperty(EsrSidsSampler<TLoader>::NumInputs, fParConfig.GetValue<int>("NumInputs"));
+    sampler.SetProperty(EsrSidsSampler<TLoader>::NumOutputs, fParConfig.GetValue<int>("NumOutputs"));
 
     sampler.ChangeState(EsrSidsSampler<TLoader>::INIT);
 
@@ -1154,10 +1165,10 @@ void SidsGui::StartSampler()
     // sampler.SetProperty(EsrSidsSampler::InputAddress, "tcp://localhost:5560", 0);
 
     // OUTPUT: 0 - data
-    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputSocketType, fParConfig.GetStringValue("OutputSocketType").c_str(), 0);
-    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputSndBufSize, fParConfig.GetIntValue("OutputSndBufSize"), 0);
-    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputMethod, fParConfig.GetStringValue("OutputMethod").c_str(), 0);
-    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputAddress, fParConfig.GetStringValue("OutputAddress").c_str(), 0);
+    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputSocketType, fParConfig.GetValue<string>("OutputSocketType").c_str(), 0);
+    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputSndBufSize, fParConfig.GetValue<int>("OutputSndBufSize"), 0);
+    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputMethod, fParConfig.GetValue<string>("OutputMethod").c_str(), 0);
+    sampler.SetProperty(EsrSidsSampler<TLoader>::OutputAddress, fParConfig.GetValue<string>("OutputAddress").c_str(), 0);
 
     
     
