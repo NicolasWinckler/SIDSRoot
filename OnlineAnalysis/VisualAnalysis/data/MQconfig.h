@@ -26,9 +26,6 @@ typedef boost::any any;
 typedef map<string,any> many;
 #endif
 
-
-
-
 class MQconfig 
 {
 public:
@@ -136,6 +133,8 @@ protected:
             if(is_double(p.second))
                 cout<<any_cast<double>(p.second);
             
+            if(is_float(p.second))
+                cout<<any_cast<float>(p.second);
             
             cout<<endl;
         }

@@ -120,7 +120,6 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    
    
    string name=fParConfig.GetValue<string>("InputFile");
-   cout<<"name="<<name<<endl;
     fFileName=name.c_str();
     TFile* rootfile0 = new TFile(fFileName);
     RootFileManager(rootfile0);
@@ -133,13 +132,8 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    fListTree->Connect("DataDropped(TGListTreeItem*, TDNDData*)", "SidsGui",
                       this, "DataDropped(TGListTreeItem*,TDNDData*)");
 
-   
-   
-   
    ////////////////////////////////////////////////////// 1st layer 2nd col
    ///
-  
-   
    
    fEc2 = new TRootEmbeddedCanvas ("AnalysisCanvas",hfrm,600,400);
    fEc2->SetDNDTarget(kTRUE);
@@ -152,15 +146,6 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
    
    fCanvas2->Connect("ProcessedEvent(Int_t,Int_t,Int_t,TObject*)","SidsGui",this,
                "DoDoubleClick(Int_t,Int_t,Int_t,TObject*)");
-   
-   /*
-   fEditorFrame = new TGCompositeFrame(fEc2, 175, fEc2->GetHeight()+4, kFixedWidth); 
-   fEc2->AddFrame(fEditorFrame, new TGLayoutHints( kLHintsNormal|kLHintsExpandY, 0, 0, 0, 0 ));
-   CreateEditor();
-   fEditor->Show();
-   fEc2->ShowFrame(fEditorFrame);
-   */
-   //hfrm2->AddFrame(canvas2, new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 5, 5));
    
    
    hfrm->AddFrame(fEc2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
