@@ -194,6 +194,15 @@ file(MAKE_DIRECTORY ${OUTPUT_DATA_DIR})
 
 
 WRITE_CONFIG_FILE(config.sh)
+
+file(COPY "config.patch" DESTINATION "${CMAKE_BINARY_DIR}")
+execute_process(COMMAND patch config.sh config.patch
+		WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+		RESULT_VARIABLE result
+		OUTPUT_VARIABLE output
+		ERROR_VARIABLE output)
+message(STATUS "Patch output: ${output}")
+
  
 configure_file(${SIDS_SOURCE_DIR}/CTestCustom.cmake 
                ${SIDS_BINARY_DIR}/CTestCustom.cmake
