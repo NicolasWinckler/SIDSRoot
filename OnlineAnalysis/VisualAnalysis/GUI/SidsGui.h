@@ -95,75 +95,87 @@ enum EMyMessageTypes {
 
 //----------------------------------------------------------------------
 
-class SidsGui : public TGMainFrame {
+class SidsGui : public TGMainFrame 
+{
+
+public:
+    SidsGui(const TGWindow *p, int w, int h, MQconfig SamplerConfig, std::string Filename="");
+    virtual ~SidsGui();
+    
+    /// buttons & gui stuffs
+    void HandleMenu(Int_t);
+    void DataDropped(TGListTreeItem* item, TDNDData* data);
+    void ResetStatus();
+    void DoDraw();
+    void DoCloseWindow();
+    void DoExit();
+    void DoValidate();
+    void AddDecay();
+    void RemoveDecay();
+    void DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *);
+    void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
 
 protected:
-   TRootEmbeddedCanvas  *fEc;          // embedded canvas
-   TRootEmbeddedCanvas  *fEc2;          // embedded canvas
-   TGTextButton         *fButtonExit;  // "Exit" text button
-   TGTextButton         *fButtonValidate;    // "Validate" text button
-   SidsQualityTagField  *fFileQualityTag;
-   TGMenuBar            *fMenuBar;     // main menu bar
-   TGPopupMenu          *fMenuFile;    // "File" popup menu entry
-   TGPopupMenu          *fMenuHelp;    // "Help" popup menu entry
-   TCanvas              *fCanvas1;      // canvas
-   TCanvas              *fCanvas2;      // canvas
-   TGListTree           *fListTree;    // left list tree
-   TGListTreeItem       *fBaseLTI;     // base (root) list tree item
-   TGLabel              *fStatus;      // label used to display status
-   TGStatusBar          *fStatusBar;
-   TGraph               *fGraph;       // TGraph object
-   TH1D                 *fHisto_px;      // freq proj
-   TH1D                 *fParentTrace;      //  parent proj
-   TH1D                 *fDaughterTrace;      // daughter proj
-   TH1I                 *fNEC;
-   TH1F                 *fPfreq;
-   TGVerticalFrame      *fControlFrame;
-   TString              fFileName;
-   TGFileInfo           fFileInfo;
-   EsrInjData           fDecayData;
-   string               fDetectorID;
-   float                fParentFreq;
-   //TGCompositeFrame   *fEditorFrame;
-   //TVirtualPadEditor  *fEditor;
+    TRootEmbeddedCanvas  *fEc;                  // embedded canvas (left))
+    TRootEmbeddedCanvas  *fEc2;                 // embedded canvas (right)
+    TGTextButton         *fButtonExit;          // "Exit" text button
+    TGTextButton         *fButtonValidate;      // "Validate" text button
+    SidsQualityTagField  *fFileQualityTag;      // File Quality&comment button
+    TGMenuBar            *fMenuBar;             // main menu bar
+    TGPopupMenu          *fMenuFile;            // "File" popup menu entry
+    TGPopupMenu          *fMenuHelp;            // "Help" popup menu entry
+    TCanvas              *fCanvas1;             // canvas1 (left)
+    TCanvas              *fCanvas2;             // canvas (right)
+    TGListTree           *fListTree;            // left list tree
+    TGListTreeItem       *fBaseLTI;             // base (root) list tree item
+    TGLabel              *fStatus;              // label used to display status
+    TGStatusBar          *fStatusBar;           // status bar
+    TGraph               *fGraph;               // TGraph object
+    TH1D                 *fHisto_px;            // freq proj
+    TH1D                 *fParentTrace;         // parent proj
+    TH1D                 *fDaughterTrace;       // daughter proj
+    TH1I                 *fNEC;                 // number of EC History.
+    TH1F                 *fPfreq;               // Parent freq History.
+    TGVerticalFrame      *fControlFrame;        // main button frame
+    TString              fFileName;             // file name
+    TGFileInfo           fFileInfo;             // file info
+    EsrInjData           fDecayData;            // Data to fill and store
+    string               fDetectorID;           // DetectorID string
+    float                fParentFreq;           // Current Parent freq.;
+    MQconfig             fParConfig;            // Parameter container
+    TFile                *fInputFile;           // Input root file
+    
+    std::vector<SidsDecayTxtField*> fDecayField;// Decay field buttons
+    std::vector<TH1D*> f1DHisto;                // Input 1D-Histos
+    std::vector<TH2D*> f2DHisto;                // Input 2D-Histos
+    std::vector<Header*> fHeaders;              // Input Headers
+
+    
+    /// init constructor
+    void SetupGUI();            // use once in constructor
+    void InitParameters();      // use once in constructor
+    
+    /// handle files, histos etc.
+    void OpenRootFile();
+    int RootFileManager(TFile* file=NULL, const TString & filename="");
+    void SeekObject(TKey *key);
+    int AddToListTree(TObject* obj);
+    void AddToRootFile(TObject* obj, const string & outputFileName, const string &  fileOption="NEW");
+    void SaveHisto(const string & outputFileName);
+    void ReadDir(TDirectory *dir);
+    
+    /// Analysis specific
+    void FindTraces(
+            TH2D* hist2d, 
+            Int_t BinPWindow=10, Int_t BinDWindow=10, Int_t BinDist=52, 
+            Double_t sigma = 4., Double_t threshold = 0.2, 
+            Option_t* option = "");
+
+    /// MQ stuffs
+    void StartSampler();
+    bool ReadyToSend() const {return fReadyToSend;}
+    void SetSampler(bool active=false){fSampler=active;}
    
-   std::vector<SidsDecayTxtField*> fDecayField;
-   
-   std::vector<TH1D*> f1DHisto;
-   std::vector<TH2D*> f2DHisto;
-   std::vector<Header*> fHeaders;
-   
-   
-   int RootFileManager(TFile* rootfile);
-   void SeekObject(TKey *key);
-   int AddToListTree(TObject* obj);
-   void FindTraces(TH2D* hist2d, Int_t BinPWindow=10, Int_t BinDWindow=10, Int_t BinDist=52, Double_t sigma = 4., Option_t* option = "", Double_t threshold = 0.2);
-   
-public:
-   SidsGui(const TGWindow *p, int w, int h, MQconfig SamplerConfig, std::string Filename="");
-   virtual ~SidsGui();
-   void              DoDraw();
-   void              DoCloseWindow();
-   void              HandleMenu(Int_t);
-   //TObject          *GetObject(const char *obj);
-   void              OpenRootFile();//TGFileInfo fileInfo);
-   void              DataDropped(TGListTreeItem* item, TDNDData* data);
-   void              ResetStatus();
-   
-   void              DoExit();
-   void              DoValidate();
-   void              AddDecay();
-   void              RemoveDecay();
-   void              StartSampler();
-   void AddToRootFile(TObject* obj, string outputFileName, string fileOption="NEW");
-   void SaveHisto(string outputFileName);
-   void DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *);
-   
-   bool ReadyToSend() const {return fReadyToSend;}
-   void SetSampler(bool active=false){fSampler=active;}
-   
-void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
-void ReadDir(TDirectory *dir);
 private:
     int fDecayCounter;
     int fHisto1DCounter;
@@ -171,16 +183,9 @@ private:
     int fHeaderCounter;
     bool fReadyToSend;
     bool fSampler;
-    MQconfig fParConfig;
-   ClassDef(SidsGui, 0); // Mainframe for Drag and Drop demo
+    
+   ClassDef(SidsGui, 0); 
 };
-
-/*
-#ifndef __CINT__
-static void s_signal_handler(int signal);
-static void s_catch_signals(void);
-#endif //__CINT__
-*/
 
 #endif	/* SIDSGUI_H */
 

@@ -58,17 +58,105 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
         fGraph(NULL), fHisto_px(NULL), fParentTrace(NULL), fDaughterTrace(NULL),
         fNEC(NULL), fPfreq(NULL), fControlFrame(NULL),
         fFileName(Filename.c_str()), fFileInfo(), 
-        fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.), fDecayCounter(0), 
-        fHisto1DCounter(0), fHisto2DCounter(0),fHeaderCounter(0),
-        fReadyToSend(false), fSampler(false),
-        fParConfig(SamplerConfig)
+        fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.),
+        fParConfig(SamplerConfig), fInputFile(NULL),
+        fDecayCounter(0), fHisto1DCounter(0), fHisto2DCounter(0), fHeaderCounter(0),
+        fReadyToSend(false), fSampler(false)
 
 {
    // Constructor.
+    
+    InitParameters();
+    SetupGUI();
+   
+}
 
-   SetCleanup(kDeepCleanup);
-   const TGPicture *pic = 0;
-   TGListTreeItem *item;
+//______________________________________________________________________________
+SidsGui::~SidsGui()
+{
+   // Destructor. Doesnt't do much here.
+    //TVirtualPadEditor::Terminate();
+    //SafeDelete(fEditor);
+    for(unsigned int i(0);i<f1DHisto.size() ; i++)
+    {
+        if(f1DHisto[i])
+        {
+             delete f1DHisto[i];
+             f1DHisto[i]=NULL;
+        }
+    }
+    f1DHisto.clear();
+   
+   for(unsigned int i(0);i<f2DHisto.size() ; i++)
+    {
+        if(f2DHisto[i])
+        {
+             delete f2DHisto[i];
+             f2DHisto[i]=NULL;
+        }
+    }
+    f2DHisto.clear();
+   
+   for(unsigned int i(0);i<fHeaders.size() ; i++)
+    {
+        if(fHeaders[i])
+        {
+             delete fHeaders[i];
+             fHeaders[i]=NULL;
+        }
+    }
+    fHeaders.clear();
+    
+    if(fHisto_px)
+    {
+        delete fHisto_px;
+        fHisto_px=NULL;
+    }
+    
+    if(fParentTrace)
+    {
+        delete fParentTrace;
+        fParentTrace=NULL;
+    }
+    
+    if(fDaughterTrace)
+    {
+        delete fDaughterTrace;
+        fDaughterTrace=NULL;
+    }
+    
+    if(fNEC)
+    {
+        delete fNEC;
+        fNEC=NULL;
+    }
+    
+    if(fPfreq)
+    {
+        delete fPfreq;
+        fPfreq=NULL;
+    }
+    
+    if(fInputFile)
+    {
+        if(fInputFile->IsOpen())
+            fInputFile->Close();
+        delete fInputFile;
+        fInputFile=NULL;
+    }
+   
+}
+
+
+
+
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
+/// ////////////////////////////// Setup the GUI /////////////////////////////////
+/// ////////////////////////////////////////////////////////////////////////////////////////////////
+//______________________________________________________________________________
+void SidsGui::SetupGUI()
+{
+    SetCleanup(kDeepCleanup);
    ////////////////////////////////////////////////////// 0th layer (menu)
    fMenuBar = new TGMenuBar(this, 35, 50, kHorizontalFrame);
 
@@ -119,11 +207,16 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
 #endif
    
    
-   string name=fParConfig.GetValue<string>("InputFile");
-    fFileName=name.c_str();
-    TFile* rootfile0 = new TFile(fFileName);
-    RootFileManager(rootfile0);
-   
+    
+    //TFile* rootfile0 = new TFile(fFileName);
+    RootFileManager(fInputFile);
+    
+    if(fNEC)
+        AddToListTree(fNEC);
+    
+    if(fPfreq)
+        AddToListTree(fPfreq);
+    
    // open the base list tree item and allow to drop into it
    fListTree->OpenItem(fBaseLTI);
    fListTree->GetFirstItem()->SetDNDTarget(kTRUE);
@@ -229,33 +322,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
     fStatusBar->SetParts(parts, 4);
     fStatusBar->Draw3DCorner(kFALSE);
     AddFrame(fStatusBar, new TGLayoutHints(kLHintsExpandX, 0, 0, 10, 0));
-   
-
-    ////////////////////////////////////////////////////// load number of EC histogram
     
-    string outputfilename=fParConfig.GetValue<string>("OutputFile");
-    string treename=fParConfig.GetValue<string>("TreeName");
-    string branchname=fParConfig.GetValue<string>("Branch");
-    
-    
-    
-    EsrTree DecayTree(outputfilename,treename,branchname);
-    //EsrTree *DecayTree = new EsrTree(outputfilename,treename,branchname);
-    std::vector<EsrInjData> DataList=DecayTree.GetEsrData();
-    
-    int binNumber=(int)DataList.size();
-    fNEC = new TH1I("NEC","Number of EC vs injection number",binNumber,1.,(Double_t)binNumber);
-    fPfreq = new TH1F("ParentFreq","Frequency of parent ions vs injection number",binNumber,1.,(Double_t)binNumber);
-    for(unsigned int i(0); i<DataList.size(); i++)
-    {
-        int NumbEC=DataList[i].GetNEC();
-        float freq=DataList[i].GetCoolParentFreq();
-        fNEC->SetBinContent(i+1,NumbEC);
-        fPfreq->SetBinContent(i+1,freq);
-    }//*/
-    //delete DecayTree;
-    AddToListTree(fNEC);
-    AddToListTree(fPfreq);
    //////////////////////////////////////////////////////
    
    SetWindowName("Single Ion Decay Spectroscopy Analysis");
@@ -267,43 +334,31 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
 }
 
 //______________________________________________________________________________
-SidsGui::~SidsGui()
+void SidsGui::InitParameters()
 {
-   // Destructor. Doesnt't do much here.
-    //TVirtualPadEditor::Terminate();
-    //SafeDelete(fEditor);
-    for(unsigned int i(0);i<f1DHisto.size() ; i++)
-    {
-        if(f1DHisto[i])
-        {
-             delete f1DHisto[i];
-             f1DHisto[i]=NULL;
-        }
-    }
-    f1DHisto.clear();
-   
-   for(unsigned int i(0);i<f2DHisto.size() ; i++)
-    {
-        if(f2DHisto[i])
-        {
-             delete f2DHisto[i];
-             f2DHisto[i]=NULL;
-        }
-    }
-    f2DHisto.clear();
-   
-   for(unsigned int i(0);i<fHeaders.size() ; i++)
-    {
-        if(fHeaders[i])
-        {
-             delete fHeaders[i];
-             fHeaders[i]=NULL;
-        }
-    }
-    fHeaders.clear();
-   
-}
+    fFileName=fParConfig.GetValue<string>("InputFile").c_str();
+    string outputfilename=fParConfig.GetValue<string>("OutputFile");
+    string treename=fParConfig.GetValue<string>("TreeName");
+    string branchname=fParConfig.GetValue<string>("Branch");
 
+    //fInputFile = new  TFile(fFileName);
+    fInputFile=TFile::Open(fFileName,"READ");
+    EsrTree *DecayTree = new EsrTree(outputfilename,treename,branchname);
+    std::vector<EsrInjData> DataList=DecayTree->GetEsrData();
+    delete DecayTree;
+    
+    int binNumber=(int)DataList.size();
+    fNEC = new TH1I("NEC","Number of EC vs injection number",binNumber,1.,(Double_t)binNumber);
+    fPfreq = new TH1F("ParentFreq","Frequency of parent ions vs injection number",binNumber,1.,(Double_t)binNumber);
+    for(unsigned int i(0); i<DataList.size(); i++)
+    {
+        int NumbEC=DataList[i].GetNEC();
+        float freq=DataList[i].GetCoolParentFreq();
+        fNEC->SetBinContent(i+1,NumbEC);
+        fPfreq->SetBinContent(i+1,freq);
+    }
+    
+}
 
 /// ////////////////////////////////////////////////////////////////////////////////////////////////
 /// ////////////////////////////// file/object managing function /////////////////////////////////
@@ -317,16 +372,15 @@ void SidsGui::OpenRootFile()
     new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &fFileInfo);
     dir = fFileInfo.fIniDir;
     fFileName=fFileInfo.fFilename;
-    std::cout<<"Opening "<<fFileName <<std::endl;
-    //std::cout<<boost::filesystem::basename(fFileName.Data())<<std::endl;
+    cout<<"[INFO] Opening "<<fFileName <<endl;
+    //cout<<boost::filesystem::basename(fFileName.Data())<<endl;
     
-    TFile* rootfile = new TFile(fFileName);
-    
-    RootFileManager(rootfile);
+    fInputFile=TFile::Open(fFileName,"READ");
+    RootFileManager(fInputFile, fFileName);
 }
 
 
-void SidsGui::AddToRootFile(TObject* obj, string outputFileName, string fileOption)
+void SidsGui::AddToRootFile(TObject* obj, const string & outputFileName, const string & fileOption)
 {
     
     TFile* rootfile = new TFile(outputFileName.c_str(),fileOption.c_str());
@@ -335,7 +389,7 @@ void SidsGui::AddToRootFile(TObject* obj, string outputFileName, string fileOpti
     delete rootfile;
 }
 
-void SidsGui::SaveHisto(string outputFileName)
+void SidsGui::SaveHisto(const string &  outputFileName)
 {
     for(unsigned int i(0);i<f1DHisto.size();i++)
         if(f1DHisto[i])
@@ -368,27 +422,50 @@ void SidsGui::SaveHisto(string outputFileName)
 }
 
 //______________________________________________________________________________
-int SidsGui::RootFileManager(TFile* rootfile)
+int SidsGui::RootFileManager(TFile* file, const TString & filename)
 {
-
-    if (!rootfile->IsOpen()) 
+    
+    
+    if(file)
     {
-      std::cout<<"[ERROR] Cannot open file "<<fFileName.Data()<<std::endl;
-      
-      return 0;
-    }
+        if (!file->IsOpen()) 
+        {
+          cout<<"[ERROR] Cannot open file " << file->GetName() <<endl;
 
-    TList* list = rootfile->GetListOfKeys() ;
+          return 0;
+        }
+        else
+            if(file->ReOpen("READ")<0)
+                cout<<"[ERROR] Failed reopening file " << file->GetName() <<endl;
+    }
+    else
+    {
+        
+        cout<<"[INFO] Opening file"<< filename <<endl;
+        fInputFile=TFile::Open(fFileName,"READ");
+        
+        if (!file->IsOpen()) 
+        {
+          cout<<"[ERROR] Cannot open file " << file->GetName() <<endl;
+
+          return 0;
+        }
+    }
+        
+
+    TList* list = file->GetListOfKeys() ;
     if (!list) 
     { 
-          std::cout<<"[ERROR] No key found in file "<<fFileName.Data()<<std::endl;
+          cout<<"[ERROR] No key found in file "<<file->GetName()<<endl;
           return 0;
     }
     
-    fBaseLTI = fListTree->AddItem(0, (boost::filesystem::basename(fFileName.Data())).c_str());
+    fBaseLTI = fListTree->AddItem(0, (boost::filesystem::basename(file->GetName())).c_str());
     
     TDirectory *CurrentDir=gDirectory;
     ReadDir(CurrentDir);
+    
+    
     return 1;
 }
 
@@ -483,7 +560,7 @@ void SidsGui::SeekObject(TKey *key)
     {
         Header* RsaHeader=NULL;
         RsaHeader=(Header*)gDirectory->Get(obj->GetName());
-        //std::cout<<"Header name = "<<obj->GetName()<<std::endl;
+        //cout<<"Header name = "<<obj->GetName()<<endl;
         
         //RsaHeader->Show();
         if(RsaHeader)
@@ -768,8 +845,8 @@ void SidsGui::DoDraw()
                 else
                     Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(f2DHisto[i]->GetXaxis()->GetLast());
                 
-                //std::cout<<"Xmin : "<< Xmin<<std::endl;
-                //std::cout<<"Xax : "<< Xmax<<std::endl;
+                //cout<<"Xmin : "<< Xmin<<endl;
+                //cout<<"Xax : "<< Xmax<<endl;
                 f2DHisto[i]->GetXaxis()->SetRangeUser(Xmin,Xmax);
                 
                 histoname+="_Rebinned";
@@ -795,7 +872,7 @@ void SidsGui::DoDraw()
                 Double_t threshold=fParConfig.GetValue<double>("ThresholdPeak");
                 
                 
-                FindTraces(f2DHisto[i],BinPWindow,BinDWindow,BinDist,sigma,"",threshold);
+                FindTraces(f2DHisto[i],BinPWindow,BinDWindow,BinDist,sigma,threshold);
                 
                 fHisto_px->Draw();
                 break;
@@ -864,7 +941,7 @@ void SidsGui::AddDecay()
     
     if(fDecayCounter<fDecayField.size())
     {
-        std::cout<<"Add decay "  <<name.Data() <<std::endl;
+        cout<<"Add decay "  <<name.Data() <<endl;
         fControlFrame->AddFrame(fDecayField[fDecayCounter], new TGLayoutHints(kLHintsExpandX,2,2,5,5));
         fDecayField[fDecayCounter]->GetCoordX()->Connect("TextChanged(char*)", "SidsDecayTxtField",
                                    fDecayField[fDecayCounter], "GetDecayFreqField(char*)");
@@ -895,7 +972,7 @@ void SidsGui::RemoveDecay()
     {
         TString name("Decay");
         name+=fDecayCounter;
-        std::cout<<"Remove decay "  <<name.Data() <<std::endl;
+        cout<<"Remove decay "  <<name.Data() <<endl;
         
         //fControlFrame->RemoveFrame(fDecayField[index]);
         fDecayField[index]->ClearWindow();
@@ -969,12 +1046,12 @@ void SidsGui::DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *selected)
 //______________________________________________________________________________
 void SidsGui::DoValidate()
 {
-    //std::cout<<"Decay Rev. Freq is : "  <<fDecayFreq[0]<<std::endl;
-    //std::cout<<"Decay Time is : "       <<fDecayTime[0]<<std::endl;
+    //cout<<"Decay Rev. Freq is : "  <<fDecayFreq[0]<<endl;
+    //cout<<"Decay Time is : "       <<fDecayTime[0]<<endl;
     
     
-    //std::cout<<"Qualitytag is : "  << fFileQualityTag->GetTag() <<std::endl;
-    //std::cout<<"comment is : "       << fFileQualityTag->GetComment() <<std::endl;
+    //cout<<"Qualitytag is : "  << fFileQualityTag->GetTag() <<endl;
+    //cout<<"comment is : "       << fFileQualityTag->GetComment() <<endl;
     string headerSuffix("_header");
     string headerID(fDetectorID);
     headerID+=headerSuffix;
@@ -1021,9 +1098,9 @@ void SidsGui::DoValidate()
     
     for(unsigned int i(0);i<fDecayField.size();i++)
     {
-        std::cout<<"Title : "<<std::string(fDecayField[i]->GetTitle())<<std::endl;
-        std::cout<<"Decay Rev. Freq is : "  <<fDecayField[i]->GetDecayFreq() <<std::endl;
-        std::cout<<"Decay Time is : "       <<fDecayField[i]->GetDecayTime() <<std::endl;
+        cout<<"Title : "<<std::string(fDecayField[i]->GetTitle())<<endl;
+        cout<<"Decay Rev. Freq is : "  <<fDecayField[i]->GetDecayFreq() <<endl;
+        cout<<"Decay Time is : "       <<fDecayField[i]->GetDecayTime() <<endl;
         
         EsrBinDecayEvent Event(SIDS::kECDecay);
         Event.SetBinDecayTime(fDecayField[i]->GetDecayTime());
@@ -1035,7 +1112,7 @@ void SidsGui::DoValidate()
     
     vector<EsrDecayEvent> DecayList=fDecayData.GetECData();
     
-    std::cout<<"---------------- PRINT DECAYS ------------"<<std::endl;
+    cout<<"---------------- PRINT DECAYS ------------"<<endl;
     for(unsigned int i(0);i<DecayList.size();i++)
     {
         DecayList[i].PrintEvent();        
@@ -1062,7 +1139,7 @@ void SidsGui::DoValidate()
 /// ////////////////////////////// Other function /////////////////////////////////
 /// ////////////////////////////////////////////////////////////////////////////////////////////////
 //______________________________________________________________________________
-void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t BinDist, Double_t sigma, Option_t* option, Double_t threshold)
+void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t BinDist, Double_t sigma, Double_t threshold, Option_t* option)
 {
     int Rebinning=fParConfig.GetValue<int>("BinningTraces");
     int NPeak2Search=2;
@@ -1085,11 +1162,12 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
         */
     }
     
-    
+    //TODO : make a peak finder algorithm that return parent frequency
     TSpectrum *sp = new TSpectrum(NPeak2Search);
     NfounPeak = sp->Search(fHisto_px,sigma,option,threshold);
     Float_t *xpeaks = sp->GetPositionX();
     fParentFreq=xpeaks[0];
+    delete sp;
     int parentBin=fHisto_px->GetXaxis()->FindBin(fParentFreq);
     //cout<<"xpeaks[0] = "<<xpeaks[0]<<endl;
     
@@ -1228,7 +1306,7 @@ void SidsGui::StartSampler()
     }
     catch (boost::archive::archive_exception& e)
     {
-        std::cout << e.what();
+        cout << e.what();
     }
     //*/
 
