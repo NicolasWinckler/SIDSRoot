@@ -1,0 +1,10 @@
+--- config.sh	2014-09-22 20:02:50.453201192 +0200
++++ config.sh-new	2014-09-22 20:12:33.188735537 +0200
+@@ -41,6 +41,6 @@
+   export VMCWORKDIR="/data.local/oscil_software_test/fair_install/SIDSRoot"
+   export FAIRLIBDIR="/data.local/oscil_software_test/fair_install/SIDSRoot/build/lib"
+   export DYLD_LIBRARY_PATH=""
+-  export LD_LIBRARY_PATH="/data.local/oscil_software_test/fair_install/SIDSRoot/build/lib:/data.local/oscil_software_test/fair_install/FairRootInst/lib:/cvmfs/fairroot.gsi.de/fairsoft/jul14p2/lib/root:/cvmfs/fairroot.gsi.de/fairsoft/jul14p2/lib"
++  export LD_LIBRARY_PATH="/cvmfs/it.gsi.de/compiler/gcc/4.8/lib64:/data.local/oscil_software_test/fair_install/SIDSRoot/build/lib:/data.local/oscil_software_test/fair_install/FairRootInst/lib:/cvmfs/fairroot.gsi.de/fairsoft/jul14p2/lib/root:/cvmfs/fairroot.gsi.de/fairsoft/jul14p2/lib"
+   export PATH="/cvmfs/fairroot.gsi.de/fairsoft/jul14p2/bin:/cvmfs/it.gsi.de/compiler/gcc/4.8/bin:.:/usr/local/bin:/usr/bin:/bin:/usr/bin/X11:/usr/games"
+ fi
