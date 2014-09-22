@@ -117,6 +117,7 @@ protected:
    TH1D                 *fParentTrace;      //  parent proj
    TH1D                 *fDaughterTrace;      // daughter proj
    TH1I                 *fNEC;
+   TH1F                 *fPfreq;
    TGVerticalFrame      *fControlFrame;
    TString              fFileName;
    TGFileInfo           fFileInfo;

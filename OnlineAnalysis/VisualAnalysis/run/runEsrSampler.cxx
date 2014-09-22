@@ -27,16 +27,16 @@ using std::stringstream;
 
 int main(int argc, char** argv)
 {
-    if (argc != 23)
+    if (argc != 24)
     {
-        MQLOG(ERROR)<<"Number of argument incorrect. ("<<argc<<" instead of 23)";
+        MQLOG(ERROR)<<"Number of argument incorrect. ("<<argc<<" instead of 24)";
         MQLOG(INFO) <<"Script usage: startVisualAnalysis \t userName inputFile \n";
         MQLOG(INFO) << "Binary usage: EsrSidsSampler$dataFormat \tID inputFile \n"
              << "\t\t userName treeName branch outputFile\n"
              << "\t\t eventRate numIoTreads\n"
              << "\t\toutputSocketType outputSndBufSize outputMethod outputAddress\n"
-             << "\t\t binDistancePDfreq binPWindow binDWindow binningTraces binningFreq2dHisto\n" 
-             << "\t\t binSigmaPeak thresholdPeak detectorID detectorSuffix kickerPrefix\n"   
+             << "\t\t binDistancePDfreq binPWindow binDWindow binningTraces binningFreqTH2\n" 
+             << "\t\t binSigmaPeak thresholdPeak detectorID detectorSuffix kickerPrefix binZoomTH2Window\n"   
                 << endl;
         return 1;
     }
@@ -110,9 +110,9 @@ int main(int argc, char** argv)
     SamplerConfig.SetValue("BinningTraces",BinningTraces);
     ++i;
     
-    int BinningFreq2dHisto;
-    stringstream(argv[i]) >> BinningFreq2dHisto;
-    SamplerConfig.SetValue("BinningFreq2dHisto",BinningFreq2dHisto);
+    int BinningFreqTH2;
+    stringstream(argv[i]) >> BinningFreqTH2;
+    SamplerConfig.SetValue("BinningFreqTH2",BinningFreqTH2);
     ++i;
     
     double BinSigmaPeak;
@@ -124,11 +124,19 @@ int main(int argc, char** argv)
     stringstream(argv[i]) >> ThresholdPeak;
     SamplerConfig.SetValue("ThresholdPeak",ThresholdPeak);
     ++i;
+    
     SamplerConfig.SetValue("DetectorID",string(argv[i]));
     ++i;
+    
     SamplerConfig.SetValue("DetectorSuffix",string(argv[i]));
     ++i;
+    
     SamplerConfig.SetValue("KickerPrefix",string(argv[i]));
+    ++i;
+    
+    int BinZoomTH2Window;
+    stringstream(argv[i]) >> BinZoomTH2Window;
+    SamplerConfig.SetValue("BinZoomTH2Window",BinZoomTH2Window);
     ++i;
     
     

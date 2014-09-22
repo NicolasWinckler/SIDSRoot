@@ -50,11 +50,13 @@ public:
         T val;
         if(!is_empty(fContainer[key]))
         {
-            if(is_int(fContainer[key]) 
+            if(
+                    is_int(fContainer[key]) 
                     || is_double(fContainer[key])
                     || is_float(fContainer[key])
                     || is_char_ptr(fContainer[key])
-                    || is_string(fContainer[key]))
+                    || is_string(fContainer[key])
+                )
                 val=Convert<T>(key);
             else
             {
@@ -67,34 +69,6 @@ public:
         return val;
     }
     
-    
-    string GetStringVal(const string & key)
-    {
-        string val;
-        if(is_string(fContainer[key]))
-            val=Convert<string>(key);
-        return val;
-    }
-    
-    int GetIntVal(const string & key)
-    {
-        int val=0;
-        if(is_int(fContainer[key]))
-            val=Convert<int>(key);
-        return val;
-    }
-    
-    double GetDoubleVal(const string & key)
-    {
-        double val=0.0;
-        
-        if(is_double(fContainer[key]))
-            val=Convert<double>(key);
-        return val;
-    }
-    
-#endif
-    
 protected:
     
     
@@ -102,18 +76,8 @@ protected:
     vector<string> fKeyDoubleValues;
     vector<string> fKeyFloatValues;
     vector<string> fKeyStringValues;
-    
-    
-    template<class U> void PrintAvailKey(U mymap)
-    {
-        cout<<"[INFO] Available keys in map are:"<<endl;
-        for(auto p : mymap)
-            cout<<"[INFO] "<<p.first<<' '<<p.second<<endl;
-    }
-    
-    
-#ifndef __CINT__
     many fContainer;
+    
     void PrintAvailKeys(many mymap)
     {
         cout<<"[INFO] Available keys in map are:"<<endl;
@@ -157,44 +121,12 @@ protected:
         return val;
     }
     
-    
-    bool is_empty(const any & operand)
-    {
-        return operand.empty();
-    }
-
-    bool is_int(const any & operand)
-    {
-        return operand.type() == typeid(int);
-    }
-
-    bool is_double(const any & operand)
-    {
-        return operand.type() == typeid(double);
-    }
-    
-    bool is_float(const any & operand)
-    {
-        return operand.type() == typeid(float);
-    }
-    
-    bool is_char_ptr(const any & operand)
-    {
-        try
-        {
-            any_cast<const char *>(operand);
-            return true;
-        }
-        catch(const boost::bad_any_cast &)
-        {
-            return false;
-        }
-    }
-    
-    bool is_string(const any & operand)
-    {
-        return any_cast<string>(&operand);
-    }
+    bool is_empty(const any & operand);
+    bool is_int(const any & operand);
+    bool is_double(const any & operand);
+    bool is_float(const any & operand);
+    bool is_char_ptr(const any & operand);
+    bool is_string(const any & operand);
     
 #endif//cint
 };

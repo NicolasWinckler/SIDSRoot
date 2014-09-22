@@ -56,7 +56,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
         fMenuHelp(NULL), fCanvas1(NULL), fCanvas2(NULL), fListTree(NULL),
         fBaseLTI(NULL), fStatus(NULL), fStatusBar(NULL), 
         fGraph(NULL), fHisto_px(NULL), fParentTrace(NULL), fDaughterTrace(NULL),
-        fNEC(NULL), fControlFrame(NULL),
+        fNEC(NULL), fPfreq(NULL), fControlFrame(NULL),
         fFileName(Filename.c_str()), fFileInfo(), 
         fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.), fDecayCounter(0), 
         fHisto1DCounter(0), fHisto2DCounter(0),fHeaderCounter(0),
@@ -244,14 +244,18 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
     std::vector<EsrInjData> DataList=DecayTree.GetEsrData();
     
     int binNumber=(int)DataList.size();
-    fNEC = new TH1I("N_{EC}","Number of EC vs injection number",binNumber,1.,(Double_t)binNumber);
+    fNEC = new TH1I("NEC","Number of EC vs injection number",binNumber,1.,(Double_t)binNumber);
+    fPfreq = new TH1F("ParentFreq","Frequency of parent ions vs injection number",binNumber,1.,(Double_t)binNumber);
     for(unsigned int i(0); i<DataList.size(); i++)
     {
         int NumbEC=DataList[i].GetNEC();
+        float freq=DataList[i].GetCoolParentFreq();
         fNEC->SetBinContent(i+1,NumbEC);
+        fPfreq->SetBinContent(i+1,freq);
     }//*/
     //delete DecayTree;
-    
+    AddToListTree(fNEC);
+    AddToListTree(fPfreq);
    //////////////////////////////////////////////////////
    
    SetWindowName("Single Ion Decay Spectroscopy Analysis");
@@ -356,6 +360,10 @@ void SidsGui::SaveHisto(string outputFileName)
     
     if(fNEC)
         AddToRootFile(fNEC,outputFileName,"UPDATE");
+    
+    if(fPfreq)
+        AddToRootFile(fPfreq,outputFileName,"UPDATE");
+    
     
 }
 
@@ -599,7 +607,8 @@ void SidsGui::DoCloseWindow()
    if (fHisto_px) { delete fHisto_px; fHisto_px = 0; }
    if (fParentTrace) { delete fParentTrace; fParentTrace = 0; }
    if (fDaughterTrace) { delete fDaughterTrace; fDaughterTrace = 0; }
-   if (fNEC) { delete fNEC; fNEC = 0; }
+   if (fNEC) { delete fNEC; fNEC = NULL; }
+   if (fPfreq) { delete fPfreq; fPfreq = NULL; }
    fMenuFile->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
    fMenuHelp->Disconnect("Activated(Int_t)", this, "HandleMenu(Int_t)");
    fButtonExit->Disconnect("Clicked()" , this, "CloseWindow()");
@@ -733,7 +742,8 @@ void SidsGui::DoDraw()
 
             if(found!=std::string::npos)
             {
-                /*if(fHisto_px)
+                /*
+                if(fHisto_px)
                 {
                     f2DHisto[i]->GetXaxis()->UnZoom();
                     f2DHisto[i]->GetYaxis()->UnZoom();
@@ -742,9 +752,22 @@ void SidsGui::DoDraw()
                 }*/
                 //fHisto_px=f2DHisto[i]->ProjectionX();
                 //Int_t binMax=fHisto_px->GetMaximumBin();
+                Int_t zoomwindow=fParConfig.GetValue<Int_t>("BinZoomTH2Window");
                 Int_t binMax=f2DHisto[i]->ProjectionX()->GetMaximumBin();
-                Double_t Xmin=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax-175);
-                Double_t Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax+175);
+                
+                Double_t Xmin=0.;
+                Double_t Xmax=0.;
+                
+                if((binMax-zoomwindow)>=f2DHisto[i]->GetXaxis()->GetFirst())
+                    Xmin=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax-zoomwindow);
+                else
+                    Xmin=f2DHisto[i]->GetXaxis()->GetBinCenter(f2DHisto[i]->GetXaxis()->GetFirst());
+                
+                if((binMax+zoomwindow)<=f2DHisto[i]->GetXaxis()->GetLast())
+                    Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax+zoomwindow);
+                else
+                    Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(f2DHisto[i]->GetXaxis()->GetLast());
+                
                 //std::cout<<"Xmin : "<< Xmin<<std::endl;
                 //std::cout<<"Xax : "<< Xmax<<std::endl;
                 f2DHisto[i]->GetXaxis()->SetRangeUser(Xmin,Xmax);
@@ -994,6 +1017,7 @@ void SidsGui::DoValidate()
     DecayData.SetUserName(fParConfig.GetValue<string>("UserName"));
     DecayData.SetQualityTag(fFileQualityTag->GetTag());
     DecayData.SetFileComment(fFileQualityTag->GetComment());
+    DecayData.SetCoolParentFreq(fParentFreq);
     
     for(unsigned int i(0);i<fDecayField.size();i++)
     {
@@ -1041,7 +1065,6 @@ void SidsGui::DoValidate()
 void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t BinDist, Double_t sigma, Option_t* option, Double_t threshold)
 {
     int Rebinning=fParConfig.GetValue<int>("BinningTraces");
-    cout<<"REBINNING="<<Rebinning<<endl;
     int NPeak2Search=2;
     int NfounPeak=0;
     hist2d->GetXaxis()->UnZoom();
@@ -1070,10 +1093,23 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
     int parentBin=fHisto_px->GetXaxis()->FindBin(fParentFreq);
     //cout<<"xpeaks[0] = "<<xpeaks[0]<<endl;
     
-    
+    int binmin=0;
+    int binmax=0;
     if(!fParentTrace)
     {
-        fParentTrace = hist2d->ProjectionY("Parent",parentBin-BinPWindow,parentBin+BinPWindow);
+        
+        if((parentBin-BinPWindow)>=fHisto_px->GetXaxis()->GetFirst())
+            binmin=parentBin-BinPWindow;
+        else
+            binmin=fHisto_px->GetXaxis()->GetFirst();
+        
+        if((parentBin+BinPWindow)<=fHisto_px->GetXaxis()->GetLast())
+            binmax=parentBin+BinPWindow;
+        else
+            binmax=fHisto_px->GetXaxis()->GetLast();
+        
+        
+        fParentTrace = hist2d->ProjectionY("Parent",binmin,binmax);
         fParentTrace->Rebin(Rebinning);
         AddToListTree(fParentTrace);
     }
@@ -1090,7 +1126,17 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
     
     if(!fDaughterTrace)
     {
-        fDaughterTrace = hist2d->ProjectionY("Daughter",BinDist+parentBin-BinDWindow,BinDist+parentBin+BinDWindow);
+        if((BinDist+parentBin-BinDWindow)>=fHisto_px->GetXaxis()->GetFirst())
+            binmin=BinDist+parentBin-BinDWindow;
+        else
+            binmin=fHisto_px->GetXaxis()->GetFirst();
+        
+        if((BinDist+parentBin+BinDWindow)<=fHisto_px->GetXaxis()->GetLast())
+            binmax=BinDist+parentBin+BinDWindow;
+        else
+            binmax=fHisto_px->GetXaxis()->GetLast();
+        
+        fDaughterTrace = hist2d->ProjectionY("Daughter",binmin,binmax);
         fDaughterTrace->Rebin(Rebinning);
         AddToListTree(fDaughterTrace);
     }

@@ -47,8 +47,9 @@ MQconfig::MQconfig()
     fKeyIntValues.push_back("BinDistancePDfreq");
     fKeyIntValues.push_back("BinPWindow");
     fKeyIntValues.push_back("BinDWindow");
+    fKeyIntValues.push_back("BinZoomTH2Window");
     fKeyIntValues.push_back("BinningTraces");
-    fKeyIntValues.push_back("BinningFreq2dHisto");
+    fKeyIntValues.push_back("BinningFreqTH2");
     
     
     /////////////////////////////////////////////////////////////////////
@@ -72,3 +73,42 @@ MQconfig::MQconfig()
 MQconfig::~MQconfig() 
 {   
 }
+
+bool MQconfig::is_empty(const any & operand)
+{
+    return operand.empty();
+}
+
+bool MQconfig::is_int(const any & operand)
+{
+    return operand.type() == typeid(int);
+}
+
+bool MQconfig::is_double(const any & operand)
+{
+    return operand.type() == typeid(double);
+}
+
+bool MQconfig::is_float(const any & operand)
+{
+    return operand.type() == typeid(float);
+}
+
+bool MQconfig::is_char_ptr(const any & operand)
+{
+    try
+    {
+        any_cast<const char *>(operand);
+        return true;
+    }
+    catch(const boost::bad_any_cast &)
+    {
+        return false;
+    }
+}
+
+bool MQconfig::is_string(const any & operand)
+{
+    return any_cast<string>(&operand);
+}
+
