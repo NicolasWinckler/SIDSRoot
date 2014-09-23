@@ -137,6 +137,19 @@ SidsGui::~SidsGui()
         fPfreq=NULL;
     }
     
+    TSeqCollection* fileCollection=gROOT->GetListOfFiles();
+    TIter nextF(fileCollection);
+    TFile *file = 0;
+    while ((file = (TFile *) nextF())) 
+    {
+        if(file)
+        {
+            if(file->IsOpen())
+                file->Close();
+            delete file;
+        }
+    }
+    
     if(fInputFile)
     {
         if(fInputFile->IsOpen())
@@ -366,13 +379,15 @@ void SidsGui::InitParameters()
 //______________________________________________________________________________
 void SidsGui::OpenRootFile()
 {
+    
+
     static TString dir(".");
     fFileInfo.fFileTypes = dnd_types;
     fFileInfo.fIniDir    = StrDup(dir);
     new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &fFileInfo);
     dir = fFileInfo.fIniDir;
     fFileName=fFileInfo.fFilename;
-    cout<<"[INFO] Opening "<<fFileName <<endl;
+    cout<<"[INFO] Opening " << fFileName <<endl;
     //cout<<boost::filesystem::basename(fFileName.Data())<<endl;
     
     fInputFile=TFile::Open(fFileName,"READ");
@@ -425,8 +440,7 @@ void SidsGui::SaveHisto(const string &  outputFileName)
 int SidsGui::RootFileManager(TFile* file, const TString & filename)
 {
     
-    
-    if(file)
+     if(file)
     {
         if (!file->IsOpen()) 
         {
@@ -506,7 +520,7 @@ void SidsGui::SeekObject(TKey *key)
         printf("[Warning] Object %s is not a header nor 1D nor 2D histogram : "
            "will not be converted\n",obj->GetName());
     }
-    printf("[INFO] Histo name:%s title:%s\n", obj->GetName(), obj->GetTitle());
+    printf("[INFO] Found object with name:%s and title:%s\n", obj->GetName(), obj->GetTitle());
 
     
     
@@ -814,7 +828,7 @@ void SidsGui::DoDraw()
     {
         if(f2DHisto[i])
         {
-            string histoname=string(f2DHisto[i]->GetName());
+            string histoname = string(f2DHisto[i]->GetName());
             size_t found = histoname.find(histoID);
 
             if(found!=std::string::npos)
@@ -941,7 +955,7 @@ void SidsGui::AddDecay()
     
     if(fDecayCounter<fDecayField.size())
     {
-        cout<<"Add decay "  <<name.Data() <<endl;
+        cout<<"[INFO] Add "  <<name <<endl;
         fControlFrame->AddFrame(fDecayField[fDecayCounter], new TGLayoutHints(kLHintsExpandX,2,2,5,5));
         fDecayField[fDecayCounter]->GetCoordX()->Connect("TextChanged(char*)", "SidsDecayTxtField",
                                    fDecayField[fDecayCounter], "GetDecayFreqField(char*)");
@@ -972,7 +986,7 @@ void SidsGui::RemoveDecay()
     {
         TString name("Decay");
         name+=fDecayCounter;
-        cout<<"Remove decay "  <<name.Data() <<endl;
+        cout<<"[INFO] Remove "  <<name <<endl;
         
         //fControlFrame->RemoveFrame(fDecayField[index]);
         fDecayField[index]->ClearWindow();
@@ -1034,9 +1048,9 @@ void SidsGui::DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *selected)
                     fDecayField[fDecayCounter-1]->SetCoordX(binx);
                     fDecayField[fDecayCounter-1]->SetCoordY(biny);
                     
-                    cout<<"Print Info :"<<endl;
-                    cout<<"Coord : (x="<<x<<", y="<< y <<")"<<endl;
-                    cout<<"Bin : (binx="<<binx<<", biny="<<biny<<")"<<endl;
+                    //cout<<"[INFO] Print Info :"<<endl;
+                    cout<<"[INFO] Coord : (x="<<x<<", y="<< y <<")";
+                    cout<<"  Bin : (binx="<<binx<<", biny="<<biny<<")"<<endl;
                 }
             }
             
@@ -1083,7 +1097,7 @@ void SidsGui::DoValidate()
                 freqoffset=(float)(fHeaders[i]->GetCenterFrequency()-fHeaders[i]->GetSpan()/2.);
                 timeresolution=(float)(fHeaders[i]->GetFrameLength());
                 freqresolution=1./timeresolution;
-                fHeaders[i]->Show();
+                //fHeaders[i]->Show();
             }
             
         }
@@ -1098,9 +1112,9 @@ void SidsGui::DoValidate()
     
     for(unsigned int i(0);i<fDecayField.size();i++)
     {
-        cout<<"Title : "<<std::string(fDecayField[i]->GetTitle())<<endl;
-        cout<<"Decay Rev. Freq is : "  <<fDecayField[i]->GetDecayFreq() <<endl;
-        cout<<"Decay Time is : "       <<fDecayField[i]->GetDecayTime() <<endl;
+        cout<<"[RESULTS] "<<std::string(fDecayField[i]->GetTitle())<<" : ";
+        cout<<" Rev. Freq = "  <<fDecayField[i]->GetDecayFreq() <<" bin. ";
+        cout<<"Decay Time="       <<fDecayField[i]->GetDecayTime()<<" bin." <<endl;
         
         EsrBinDecayEvent Event(SIDS::kECDecay);
         Event.SetBinDecayTime(fDecayField[i]->GetDecayTime());
@@ -1112,11 +1126,11 @@ void SidsGui::DoValidate()
     
     vector<EsrDecayEvent> DecayList=fDecayData.GetECData();
     
-    cout<<"---------------- PRINT DECAYS ------------"<<endl;
-    for(unsigned int i(0);i<DecayList.size();i++)
-    {
-        DecayList[i].PrintEvent();        
-    }
+    //cout<<"---------------- PRINT DECAYS ------------"<<endl;
+    //for(unsigned int i(0);i<DecayList.size();i++)
+    //{
+    //    DecayList[i].PrintEvent();        
+    //}
 
     string outputfilename=fParConfig.GetValue<string>("OutputFile");
     string treename=fParConfig.GetValue<string>("TreeName");
