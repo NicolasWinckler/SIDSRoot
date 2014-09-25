@@ -50,6 +50,7 @@ Set(SRCS
     GUI/SidsGui.cxx
     GUI/SidsDecayTxtField.cxx
     GUI/SidsQualityTagField.cxx
+    GUI/HistoProperty.cxx
     ${SIDS_SOURCE_DIR}/time2root/header.cxx
 )
 

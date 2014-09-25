@@ -58,7 +58,7 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
         fGraph(NULL), fHisto_px(NULL), fParentTrace(NULL), fDaughterTrace(NULL),
         fNEC(NULL), fPfreq(NULL), fControlFrame(NULL),
         fFileName(Filename.c_str()), fFileInfo(), 
-        fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.),
+        fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.), fZmaxVal(0.),
         fParConfig(SamplerConfig), fInputFile(NULL),
         fDecayCounter(0), fHisto1DCounter(0), fHisto2DCounter(0), fHeaderCounter(0),
         fReadyToSend(false), fSampler(false)
@@ -258,6 +258,11 @@ void SidsGui::SetupGUI()
    
    fControlFrame = new TGVerticalFrame(hfrm, 200, 400);
    
+   HistoProperty* testgui = new HistoProperty(fControlFrame,"Histogram property");
+   
+   fControlFrame->AddFrame(testgui, new TGLayoutHints( kLHintsExpandX,2,2,5,5));
+   
+   
    /// QUALITY BUTTON
    
    fFileQualityTag = new SidsQualityTagField(fControlFrame,"Tag and comment");
@@ -272,7 +277,10 @@ void SidsGui::SetupGUI()
    
    /// DRAW BUTTON
    TGTextButton *draw = new TGTextButton(fControlFrame,"&Draw");
-   draw->Connect("Clicked()","SidsGui",this,"DoDraw()");
+   //Emit("DoDraw(bool)",true);
+   draw->Connect("Clicked()","SidsGui",this,"DoDraw(bool)");
+   this->Connect("ZoomZaxis(bool)","SidsGui",this,"DoDraw(bool)");
+   //ZoomZaxis(true);
    
    fControlFrame->AddFrame(draw, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
    
@@ -801,7 +809,7 @@ void SidsGui::DataDropped(TGListTreeItem *, TDNDData *data)
 }
 
 //______________________________________________________________________________
-void SidsGui::DoDraw() 
+void SidsGui::DoDraw(bool ZoomZAxis) 
 {
     
     string Suffix;
@@ -833,36 +841,6 @@ void SidsGui::DoDraw()
 
             if(found!=std::string::npos)
             {
-                /*
-                if(fHisto_px)
-                {
-                    f2DHisto[i]->GetXaxis()->UnZoom();
-                    f2DHisto[i]->GetYaxis()->UnZoom();
-                    delete fHisto_px;
-                    fHisto_px=NULL;
-                }*/
-                //fHisto_px=f2DHisto[i]->ProjectionX();
-                //Int_t binMax=fHisto_px->GetMaximumBin();
-                Int_t zoomwindow=fParConfig.GetValue<Int_t>("BinZoomTH2Window");
-                Int_t binMax=f2DHisto[i]->ProjectionX()->GetMaximumBin();
-                
-                Double_t Xmin=0.;
-                Double_t Xmax=0.;
-                
-                if((binMax-zoomwindow)>=f2DHisto[i]->GetXaxis()->GetFirst())
-                    Xmin=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax-zoomwindow);
-                else
-                    Xmin=f2DHisto[i]->GetXaxis()->GetBinCenter(f2DHisto[i]->GetXaxis()->GetFirst());
-                
-                if((binMax+zoomwindow)<=f2DHisto[i]->GetXaxis()->GetLast())
-                    Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(binMax+zoomwindow);
-                else
-                    Xmax=f2DHisto[i]->GetXaxis()->GetBinCenter(f2DHisto[i]->GetXaxis()->GetLast());
-                
-                //cout<<"Xmin : "<< Xmin<<endl;
-                //cout<<"Xax : "<< Xmax<<endl;
-                f2DHisto[i]->GetXaxis()->SetRangeUser(Xmin,Xmax);
-                
                 histoname+="_Rebinned";
 
                 fCanvas2->cd();
@@ -870,7 +848,28 @@ void SidsGui::DoDraw()
                 TH2D* histo=dynamic_cast<TH2D*>(f2DHisto[i]->RebinX(2,histoname.c_str()));
                 if(histo)
                 {
+                    Double_t Xmin=0.;
+                    Double_t Xmax=0.;
+                    Int_t zoomwindow=fParConfig.GetValue<Int_t>("BinZoomTH2Window");
+                    Int_t binMax=histo->ProjectionX()->GetMaximumBin();
+
+                    
+                    if((binMax-zoomwindow)>=histo->GetXaxis()->GetFirst())
+                        Xmin=histo->GetXaxis()->GetBinCenter(binMax-zoomwindow);
+                    else
+                        Xmin=histo->GetXaxis()->GetBinCenter(histo->GetXaxis()->GetFirst());
+
+                    if((binMax+zoomwindow)<=histo->GetXaxis()->GetLast())
+                        Xmax=histo->GetXaxis()->GetBinCenter(binMax+zoomwindow);
+                    else
+                        Xmax=histo->GetXaxis()->GetBinCenter(histo->GetXaxis()->GetLast());
+
+                                     
                     //histo->SetMaximum(5.e-7);
+                    histo->SetStats(kFALSE);
+                    if(ZoomZAxis)
+                        histo->GetZaxis()->SetRangeUser(0.,fZmaxVal);
+                    histo->GetXaxis()->SetRangeUser(Xmin,Xmax);
                     histo->Draw("zcol");
                 }
                 
@@ -879,12 +878,11 @@ void SidsGui::DoDraw()
                 /// canvas1 PAD1 projection on frequency axis
                 fCanvas1->cd(1);
                 
-                Int_t BinPWindow=fParConfig.GetValue<int>("BinPWindow"); 
-                Int_t BinDWindow=fParConfig.GetValue<int>("BinDWindow"); 
-                Int_t BinDist=fParConfig.GetValue<int>("BinDistancePDfreq"); 
-                Double_t sigma=fParConfig.GetValue<double>("BinSigmaPeak");
-                Double_t threshold=fParConfig.GetValue<double>("ThresholdPeak");
-                
+                Int_t BinPWindow=fParConfig.GetValue<Int_t>("BinPWindow"); 
+                Int_t BinDWindow=fParConfig.GetValue<Int_t>("BinDWindow"); 
+                Int_t BinDist=fParConfig.GetValue<Int_t>("BinDistancePDfreq"); 
+                Double_t sigma=fParConfig.GetValue<Double_t>("BinSigmaPeak");
+                Double_t threshold=fParConfig.GetValue<Double_t>("ThresholdPeak");
                 
                 FindTraces(f2DHisto[i],BinPWindow,BinDWindow,BinDist,sigma,threshold);
                 
@@ -913,6 +911,29 @@ void SidsGui::DoDraw()
     
     /// canvas1 PAD4 kicker signals
     fCanvas1->cd(4);
+    
+    double YMax=-1.e+99;
+    double YMin=1.e+99;
+    
+    for(unsigned int i(0);i<f1DHisto.size();i++)
+    {
+        if(f1DHisto[i])
+        {
+            string histoname=string(f1DHisto[i]->GetName());
+            size_t found = histoname.find(histokickerID);
+
+            if(found!=std::string::npos)
+            {
+                if(f1DHisto[i]->GetBinContent(f1DHisto[i]->GetMinimumBin())<=YMin)
+                    YMin=f1DHisto[i]->GetBinContent(f1DHisto[i]->GetMinimumBin());
+
+                if(f1DHisto[i]->GetBinContent(f1DHisto[i]->GetMaximumBin())>=YMax)
+                    YMax=f1DHisto[i]->GetBinContent(f1DHisto[i]->GetMaximumBin());
+            }
+        }
+        
+    }
+    
     bool drawsame=false;
     for(unsigned int i(0);i<f1DHisto.size();i++)
     {
@@ -923,6 +944,7 @@ void SidsGui::DoDraw()
 
             if(found!=std::string::npos)
             {
+                f1DHisto[i]->GetYaxis()->SetRangeUser(YMin-0.2*fabs(YMin),YMax+0.2*fabs(YMax));
                 if(drawsame)
                 {
                     f1DHisto[i]->SetLineColor(i);
@@ -934,7 +956,6 @@ void SidsGui::DoDraw()
                     f1DHisto[i]->Draw();
                     drawsame=true;
                 }
-                
                 
             }
         }

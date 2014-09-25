@@ -81,6 +81,7 @@
 
 #include "SidsQualityTagField.h"
 #include "SidsDecayTxtField.h"
+#include "HistoProperty.h"
 #include "header.h"
 
 enum EMyMessageTypes {
@@ -106,7 +107,7 @@ public:
     void HandleMenu(Int_t);
     void DataDropped(TGListTreeItem* item, TDNDData* data);
     void ResetStatus();
-    void DoDraw();
+    void DoDraw(bool ZoomZAxis=false);
     void DoCloseWindow();
     void DoExit();
     void DoValidate();
@@ -114,6 +115,13 @@ public:
     void RemoveDecay();
     void DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *);
     void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
+    void ZoomZaxis(bool ZoomZAxis=true)
+    {
+        cout<<" ********* signal sent";
+        if(ZoomZAxis) cout<<" true"<<endl;
+        else cout<<" false"<<endl;
+        Emit("ChangeState(bool)",ZoomZAxis);
+    }
 
 protected:
     TRootEmbeddedCanvas  *fEc;                  // embedded canvas (left))
@@ -142,6 +150,7 @@ protected:
     EsrInjData           fDecayData;            // Data to fill and store
     string               fDetectorID;           // DetectorID string
     float                fParentFreq;           // Current Parent freq.;
+    double               fZmaxVal;
     MQconfig             fParConfig;            // Parameter container
     TFile                *fInputFile;           // Input root file
     

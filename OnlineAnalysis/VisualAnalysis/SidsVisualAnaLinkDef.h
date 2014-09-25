@@ -17,6 +17,8 @@
 #pragma link C++ class EsrInjData;
 #pragma link C++ class SidsDecayTxtField+;
 #pragma link C++ class SidsQualityTagField+;
+#pragma link C++ class GroupBox+;
+#pragma link C++ class HistoProperty+;
 #pragma link C++ class SidsGui+;
 #pragma link C++ class EsrTree+;
 #pragma link C++ class Header;
