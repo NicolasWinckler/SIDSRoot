@@ -140,6 +140,13 @@ int main(int argc, char** argv)
     ++i;
     
     
+    int ParticleNumberLevel=1;
+    SamplerConfig.SetValue("ParticleNumberLevel",ParticleNumberLevel);
+    
+    double NoisePowerDensity=0.003;
+    SamplerConfig.SetValue("NoisePowerDensity",NoisePowerDensity);
+    
+    
     TApplication app("App", &argc, argv);
     MQLOG(INFO)<<"Run start";
     SidsGui* fSidsAnalysisGui = new SidsGui(gClient->GetRoot(), 1000, 600, SamplerConfig);

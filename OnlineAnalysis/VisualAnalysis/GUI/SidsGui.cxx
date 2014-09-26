@@ -258,10 +258,21 @@ void SidsGui::SetupGUI()
    
    fControlFrame = new TGVerticalFrame(hfrm, 200, 400);
    
-   HistoProperty* testgui = new HistoProperty(fControlFrame,"Histogram property");
+   HistoProperty* HistoProp = new HistoProperty(fControlFrame,"Histogram property");
    
-   fControlFrame->AddFrame(testgui, new TGLayoutHints( kLHintsExpandX,2,2,5,5));
+   fControlFrame->AddFrame(HistoProp, new TGLayoutHints( kLHintsExpandX,2,2,5,5));
+   HistoProp->Connect("SendBoxData(Double_t,Int_t,Int_t,Int_t,Int_t)","SidsGui",this,"ReceiveBoxData(Double_t,Int_t,Int_t,Int_t,Int_t)");
+   this->Connect("ReceiveBoxData(Double_t,Int_t,Int_t,Int_t,Int_t)","SidsGui",this,"DoDraw(Double_t,Int_t,Int_t,Int_t,Int_t)");
+   this->Connect("InitComboBoxSetting(Double_t,Int_t,Int_t,Int_t,Int_t)","GroupBox",HistoProp->GetZoomBox() ,"InitComboBoxSetting(Double_t,Int_t,Int_t,Int_t,Int_t)");
+   this->Connect("InitComboBoxSetting(Double_t,Int_t,Int_t,Int_t,Int_t)","GroupBox",HistoProp->GetProjBox() ,"InitComboBoxSetting(Double_t,Int_t,Int_t,Int_t,Int_t)");
    
+   
+   Double_t Intensity=fParConfig.GetValue<Double_t>("NoisePowerDensity");
+   Int_t ParticleNr=fParConfig.GetValue<Int_t>("ParticleNumberLevel");
+   Int_t FreqWindow=fParConfig.GetValue<Int_t>("BinZoomTH2Window");
+   Int_t BinPWindow=fParConfig.GetValue<Int_t>("BinPWindow"); 
+   Int_t BinDWindow=fParConfig.GetValue<Int_t>("BinDWindow"); 
+   InitComboBoxSetting(Intensity,ParticleNr,FreqWindow,BinPWindow,BinDWindow);
    
    /// QUALITY BUTTON
    
@@ -278,9 +289,10 @@ void SidsGui::SetupGUI()
    /// DRAW BUTTON
    TGTextButton *draw = new TGTextButton(fControlFrame,"&Draw");
    //Emit("DoDraw(bool)",true);
-   draw->Connect("Clicked()","SidsGui",this,"DoDraw(bool)");
-   this->Connect("ZoomZaxis(bool)","SidsGui",this,"DoDraw(bool)");
+   draw->Connect("Clicked()","SidsGui",this,"DoDraw(Double_t,Int_t,Int_t,Int_t,Int_t)");
+   this->Connect("ZoomZaxis(bool)","SidsGui",this,"DoDraw(Double_t,Int_t,Int_t,Int_t,Int_t)");
    //ZoomZaxis(true);
+   
    
    fControlFrame->AddFrame(draw, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
    
@@ -808,8 +820,12 @@ void SidsGui::DataDropped(TGListTreeItem *, TDNDData *data)
    fCanvas2->Update();
 }
 
+void SidsGui::InitComboBoxSetting(Double_t Intensity, Int_t ParticleNr, Int_t FreqWindow, Int_t ParentWindow, Int_t DaughterWindow)
+{
+    EmitVA("InitComboBoxSetting(Double_t,Int_t,Int_t,Int_t,Int_t)",5, Intensity,ParticleNr,FreqWindow,ParentWindow,DaughterWindow);
+}
 //______________________________________________________________________________
-void SidsGui::DoDraw(bool ZoomZAxis) 
+void SidsGui::DoDraw(Double_t Intensity, Int_t ParticleNr, Int_t FreqWindow, Int_t ParentWindow, Int_t DaughterWindow) 
 {
     
     string Suffix;
@@ -867,8 +883,8 @@ void SidsGui::DoDraw(bool ZoomZAxis)
                                      
                     //histo->SetMaximum(5.e-7);
                     histo->SetStats(kFALSE);
-                    if(ZoomZAxis)
-                        histo->GetZaxis()->SetRangeUser(0.,fZmaxVal);
+                    //if(ZoomZAxis)
+                        //histo->GetZaxis()->SetRangeUser(0.,fZmaxVal);
                     histo->GetXaxis()->SetRangeUser(Xmin,Xmax);
                     histo->Draw("zcol");
                 }

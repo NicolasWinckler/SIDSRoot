@@ -107,7 +107,7 @@ public:
     void HandleMenu(Int_t);
     void DataDropped(TGListTreeItem* item, TDNDData* data);
     void ResetStatus();
-    void DoDraw(bool ZoomZAxis=false);
+    void DoDraw(Double_t Intensity=0., Int_t ParticleNr=0, Int_t FreqWindow=0, Int_t ParentWindow=0, Int_t DaughterWindow=0);
     void DoCloseWindow();
     void DoExit();
     void DoValidate();
@@ -121,6 +121,24 @@ public:
         if(ZoomZAxis) cout<<" true"<<endl;
         else cout<<" false"<<endl;
         Emit("ChangeState(bool)",ZoomZAxis);
+    }
+    
+    void InitComboBoxSetting(Double_t Intensity, Int_t ParticleNr, Int_t FreqWindow, Int_t ParentWindow, Int_t DaughterWindow);
+    
+    
+    void ReceiveBoxData(Double_t Intensity=0., Int_t ParticleNr=0, Int_t FreqWindow=0, Int_t ParentWindow=0, Int_t DaughterWindow=0)
+    {
+        fParConfig.SetValue("NoisePowerDensity",Intensity);
+        fParConfig.SetValue("ParticleNumberLevel",ParticleNr);
+        fParConfig.SetValue("BinZoomTH2Window",FreqWindow);
+        fParConfig.SetValue("BinPWindow",ParentWindow);
+        fParConfig.SetValue("BinDWindow",DaughterWindow);
+        cout<<"Receive Intensity ="<< Intensity<<endl;
+        cout<<"Receive ParticleNr ="<< ParticleNr<<endl;
+        cout<<"Receive FreqWindow ="<< FreqWindow<<endl;
+        cout<<"Receive ParentWindow ="<< ParentWindow<<endl;
+        cout<<"Receive DaughterWindow ="<< DaughterWindow<<endl;
+        EmitVA("ReceiveBoxData(Double_t,Int_t,Int_t,Int_t,Int_t)",5, Intensity,ParticleNr,FreqWindow,ParentWindow,DaughterWindow);
     }
 
 protected:
