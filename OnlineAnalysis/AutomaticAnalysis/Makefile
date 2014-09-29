@@ -19,7 +19,7 @@ ifeq ($(OS_NAME),darwin)
 STDINCDIR := /opt/local/include
 STDLIBDIR := /opt/local/lib
 else
-STDINCDIR := -I${C_DIR} -I${ESRIO} -I${ESRIO}/../SubTask -I${SIMPATH}/include
+STDINCDIR := -I${C_DIR} -I${ESRIO} -I${ESRIO}/data -I${ESRIO}/SubTask -I${SIMPATH}/include
 STDLIBDIR := 
 endif
 
@@ -34,18 +34,20 @@ TARGET = ${SOLIB}
 SRC = ${C_DIR}/esrio_cw.c
 
 esrio_srcfiles = \
-        ${ESRIO}/EsrSMSEvent.cxx \
-        ${ESRIO}/EsrDecayEvent.cxx \
-        ${ESRIO}/EsrBinDecayEvent.cxx \
-        ${ESRIO}/EsrInjData.cxx \
-        ${ESRIO}/../SubTask/EsrTree.cxx \
-        ${C_DIR}/esrio_dict.cxx
+        ${ESRIO}/data/EsrSMSEvent.cxx \
+        ${ESRIO}/data/EsrDecayEvent.cxx \
+        ${ESRIO}/data/EsrBinDecayEvent.cxx \
+        ${ESRIO}/data/EsrInjData.cxx \
+        ${ESRIO}/SubTask/EsrTree.cxx \
+	${ESRIO}/SidsVisualAnaDict.cxx
+        #${C_DIR}/esrio_dict.cxx
 esrio_hfiles = \
-        ${ESRIO}/EsrSMSEvent.h \
-        ${ESRIO}/EsrDecayEvent.h \
-        ${ESRIO}/EsrBinDecayEvent.h \
-        ${ESRIO}/EsrInjData.h \
-        ${ESRIO}/../SubTask/EsrTree.h
+        ${ESRIO}/data/EsrSMSEvent.h \
+        ${ESRIO}/data/EsrDecayEvent.h \
+        ${ESRIO}/data/EsrBinDecayEvent.h \
+        ${ESRIO}/data/EsrInjData.h \
+        ${ESRIO}/SubTask/EsrTree.h \
+	${ESRIO}/SidsVisualAnaDict.h
         
 esrio_objfiles = $(esrio_srcfiles:.cxx=.o)
 
@@ -61,8 +63,12 @@ all : esriolib $(TARGET) initfile cprfiles
 	$(CXX) $(CPPFLAGS) -o $@ -c $< \
 	${STDINCDIR}
 
-${C_DIR}/esrio_dict.cxx : $(esrio_hfiles) ${C_DIR}/esrio_linkdef.h 
-	$(CINT) -f ${C_DIR}/esrio_dict.cxx -c $(esrio_hfiles) ${C_DIR}/esrio_linkdef.h
+#${C_DIR}/esrio_dict.cxx : $(esrio_hfiles) ${C_DIR}/esrio_linkdef.h 
+#	$(CINT) -f ${C_DIR}/esrio_dict.cxx -c $(esrio_hfiles) ${C_DIR}/esrio_linkdef.h
+
+
+${ESRIO}/SidsVisualAnaDict.cxx : $(esrio_hfiles) ${ESRIO}/SidsVisualAnaLinkDef.h 
+	$(CINT) -f ${ESRIO}/SidsVisualAnaDict.cxx -c $(esrio_hfiles) ${ESRIO}/SidsVisualAnaLinkDef.h
 
 $(TARGET) : $(OBJ)
 	$(LD) $(CPPFLAGS) -shared -o ${SOLIB} $(OBJ) ${esrio_objfiles} $(LDFLAGS)
