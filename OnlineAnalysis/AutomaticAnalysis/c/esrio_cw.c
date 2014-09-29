@@ -85,7 +85,7 @@ EXPORT long writedata_cw(int argc, char *argv[])
   decdata   = ((double **) argv)[9];
     
   // define EsrInjData item
-  EsrInjData DecayData(*datafname,SIDS::kRSA1,*dtb,*dfb,*foff);
+  EsrInjData DecayData(*datafname,SIDS::kRSA51,*dtb,*dfb,*foff);
   DecayData.SetUserName("automatic");
   DecayData.SetQualityTag(*qq);
   DecayData.SetCoolParentFreq(*(fmd+0));
