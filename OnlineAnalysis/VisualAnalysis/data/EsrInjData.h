@@ -41,6 +41,7 @@ public:
     void SetResolution(float TimeResolution, float FrequencyResolution, float FrequencyOffset);
     float GetTimeResolution() {return fTimeResolution;}
     float GetFreqResolution() {return fFreqResolution;}
+    float GetFreqOffset() {return fFrequencyOffset;}
     
     ///File name corresponding to the decays 
     void SetFileName(std::string Filename) {fFileName=Filename;}

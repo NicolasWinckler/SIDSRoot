@@ -95,6 +95,7 @@ std::vector<EsrInjData> EsrTree::GetEsrData()
 }
 
 
+/*
 #ifndef __CINT__
 std::shared_ptr<EsrInjData> EsrTree::GetInjectionData(Long64_t inj)
 {
@@ -119,7 +120,7 @@ std::shared_ptr<EsrInjData> EsrTree::GetInjectionData(Long64_t inj)
 }
 
 #endif //__CINT__
-
+*/
 
 
 ClassImp(EsrTree)
