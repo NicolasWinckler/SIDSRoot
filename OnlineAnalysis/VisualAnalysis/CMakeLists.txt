@@ -18,7 +18,7 @@ ${BASE_INCLUDE_DIRECTORIES}/base/MQ
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/data
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/MQTask
-${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/SubTask
+#${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/SubTask
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/MQDevice
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/GUI
 ${SIDS_SOURCE_DIR}/time2root
@@ -46,7 +46,7 @@ Set(SRCS
     data/EsrDecayEvent.cxx
     data/EsrBinDecayEvent.cxx
     data/EsrInjData.cxx
-    SubTask/EsrTree.cxx
+    data/EsrTree.cxx
     GUI/SidsGui.cxx
     GUI/SidsDecayTxtField.cxx
     GUI/SidsQualityTagField.cxx

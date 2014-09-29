@@ -19,7 +19,7 @@ ifeq ($(OS_NAME),darwin)
 STDINCDIR := /opt/local/include
 STDLIBDIR := /opt/local/lib
 else
-STDINCDIR := -I${C_DIR} -I${ESRIO} -I${ESRIO}/../SubTask -I${SIMPATH}/include
+STDINCDIR := -I${C_DIR} -I${ESRIO} -I${SIMPATH}/include
 STDLIBDIR := 
 endif
 
@@ -38,14 +38,14 @@ esrio_srcfiles = \
         ${ESRIO}/EsrDecayEvent.cxx \
         ${ESRIO}/EsrBinDecayEvent.cxx \
         ${ESRIO}/EsrInjData.cxx \
-        ${ESRIO}/../SubTask/EsrTree.cxx \
+        ${ESRIO}/EsrTree.cxx \
         ${C_DIR}/esrio_dict.cxx
 esrio_hfiles = \
         ${ESRIO}/EsrSMSEvent.h \
         ${ESRIO}/EsrDecayEvent.h \
         ${ESRIO}/EsrBinDecayEvent.h \
         ${ESRIO}/EsrInjData.h \
-        ${ESRIO}/../SubTask/EsrTree.h
+        ${ESRIO}/EsrTree.h
         
 esrio_objfiles = $(esrio_srcfiles:.cxx=.o)
 
