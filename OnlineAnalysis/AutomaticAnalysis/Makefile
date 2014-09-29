@@ -26,7 +26,7 @@ endif
 CPPFLAGS := $(shell root-config --cflags) -I$(STDINCDIR)
 LDFLAGS := $(shell root-config --glibs) -L$(STDLIBDIR)
 
-CPPFLAGS += -g -fPIC
+CPPFLAGS += -g -fPIC -std=c++11
 LDFLAGS += -lgsl -lgslcblas -lfftw3 -lm
 
 TARGET = ${SOLIB}
