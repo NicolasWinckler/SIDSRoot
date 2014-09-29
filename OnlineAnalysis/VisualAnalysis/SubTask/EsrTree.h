@@ -13,7 +13,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include <string>
-#include "../data/EsrInjData.h"
+#include "EsrInjData.h"
 #include <vector>
 #include <memory>
 
@@ -25,9 +25,9 @@ public:
     
     void UpdateTree(EsrInjData EsrData);
     std::vector<EsrInjData> GetEsrData();
-//    #ifndef __CINT__
-//    std::shared_ptr<EsrInjData> GetInjectionData(Long64_t inj);
-//    #endif //__CINT__
+    #ifndef __CINT__
+    std::shared_ptr<EsrInjData> GetInjectionData(Long64_t inj);
+    #endif //__CINT__
 protected:
     string fFileName;
     string fTreeName;
