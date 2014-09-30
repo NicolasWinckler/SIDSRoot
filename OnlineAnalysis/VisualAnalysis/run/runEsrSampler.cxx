@@ -42,110 +42,166 @@ int main(int argc, char** argv)
     }
 
 
-    MQconfig SamplerConfig;
+    MQconfig ConfigParameter;
 
     int i = 1;
-    SamplerConfig.SetValue("ID",string(argv[i]));
+    ConfigParameter.SetValue("ID",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetValue("InputFile",string(argv[i]));
+    ConfigParameter.SetValue("InputFile",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetValue("UserName",string(argv[i]));
+    ConfigParameter.SetValue("UserName",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetValue("TreeName",string(argv[i]));
+    ConfigParameter.SetValue("TreeName",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetValue("Branch",string(argv[i]));
+    ConfigParameter.SetValue("Branch",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetValue("OutputFile",string(argv[i]));
+    ConfigParameter.SetValue("OutputFile",string(argv[i]));
     ++i;
     
     int eventRate;
     stringstream(argv[i]) >> eventRate;
-    SamplerConfig.SetValue("EventRate",eventRate);
+    ConfigParameter.SetValue("EventRate",eventRate);
     ++i;
 
     int numIoThreads;
     stringstream(argv[i]) >> numIoThreads;
-    SamplerConfig.SetValue("NumIoThreads",numIoThreads);
+    ConfigParameter.SetValue("NumIoThreads",numIoThreads);
     ++i;
     
-    SamplerConfig.SetValue("NumInputs",0);
-    SamplerConfig.SetValue("NumOutputs",1);
+    ConfigParameter.SetValue("NumInputs",0);
+    ConfigParameter.SetValue("NumOutputs",1);
 
-    SamplerConfig.SetValue("OutputSocketType",string(argv[i]));
+    ConfigParameter.SetValue("OutputSocketType",string(argv[i]));
     ++i;
     int outputSndBufSize;
     stringstream(argv[i]) >> outputSndBufSize;
-    SamplerConfig.SetValue("OutputSndBufSize",outputSndBufSize);
+    ConfigParameter.SetValue("OutputSndBufSize",outputSndBufSize);
 
     ++i;
-    SamplerConfig.SetValue("OutputMethod",string(argv[i]));
+    ConfigParameter.SetValue("OutputMethod",string(argv[i]));
     ++i;
-    SamplerConfig.SetValue("OutputAddress",string(argv[i]));
+    ConfigParameter.SetValue("OutputAddress",string(argv[i]));
     ++i;
 
 
     //13
     int BinDistancePDfreq;
     stringstream(argv[i]) >> BinDistancePDfreq;
-    SamplerConfig.SetValue("BinDistancePDfreq",BinDistancePDfreq);
+    ConfigParameter.SetValue("BinDistancePDfreq",BinDistancePDfreq);
     ++i;
     
     int BinPWindow;
     stringstream(argv[i]) >> BinPWindow;
-    SamplerConfig.SetValue("BinPWindow",BinPWindow);
+    ConfigParameter.SetValue("BinPWindow",BinPWindow);
     ++i;
     
     int BinDWindow;
     stringstream(argv[i]) >> BinDWindow;
-    SamplerConfig.SetValue("BinDWindow",BinDWindow);
+    ConfigParameter.SetValue("BinDWindow",BinDWindow);
     ++i;
     
     int BinningTraces;
     stringstream(argv[i]) >> BinningTraces;
-    SamplerConfig.SetValue("BinningTraces",BinningTraces);
+    ConfigParameter.SetValue("BinningTraces",BinningTraces);
     ++i;
     
     int BinningFreqTH2;
     stringstream(argv[i]) >> BinningFreqTH2;
-    SamplerConfig.SetValue("BinningFreqTH2",BinningFreqTH2);
+    ConfigParameter.SetValue("BinningFreqTH2",BinningFreqTH2);
     ++i;
     
     double BinSigmaPeak;
     stringstream(argv[i]) >> BinSigmaPeak;
-    SamplerConfig.SetValue("BinSigmaPeak",BinSigmaPeak);
+    ConfigParameter.SetValue("BinSigmaPeak",BinSigmaPeak);
     ++i;
     
     double ThresholdPeak;
     stringstream(argv[i]) >> ThresholdPeak;
-    SamplerConfig.SetValue("ThresholdPeak",ThresholdPeak);
+    ConfigParameter.SetValue("ThresholdPeak",ThresholdPeak);
     ++i;
     
-    SamplerConfig.SetValue("DetectorID",string(argv[i]));
+    ConfigParameter.SetValue("DetectorID",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetValue("DetectorSuffix",string(argv[i]));
+    ConfigParameter.SetValue("DetectorSuffix",string(argv[i]));
     ++i;
     
-    SamplerConfig.SetValue("KickerPrefix",string(argv[i]));
+    ConfigParameter.SetValue("KickerPrefix",string(argv[i]));
     ++i;
     
     int BinZoomTH2Window;
     stringstream(argv[i]) >> BinZoomTH2Window;
-    SamplerConfig.SetValue("BinZoomTH2Window",BinZoomTH2Window);
+    ConfigParameter.SetValue("BinZoomTH2Window",BinZoomTH2Window);
     ++i;
     
     
-    TApplication app("App", &argc, argv);
-    MQLOG(INFO)<<"Run start";
-    SidsGui* fSidsAnalysisGui = new SidsGui(gClient->GetRoot(), 1000, 600, SamplerConfig);
-    fSidsAnalysisGui->MapWindow();
-    app.Run();
     
+    string outputfilename=ConfigParameter.GetValue<string>("OutputFile");
+    string treename=ConfigParameter.GetValue<string>("TreeName");
+    string branchname=ConfigParameter.GetValue<string>("Branch");
+    string inputFileName=ConfigParameter.GetValue<string>("InputFile");
+    string alreadyAnalyzedFilename;
+    //fInputFile = new  TFile(fFileName);
+    EsrTree *DecayTree = new EsrTree(outputfilename,treename,branchname);
+    std::vector<EsrInjData> DataList=DecayTree->GetEsrData();
+    delete DecayTree;
+    
+    int countDoublet=0;
+    bool alreadyAnalyzed=false;
+    bool startgui=true;
+    for(unsigned int i(0); i<DataList.size(); i++)
+    {
+        alreadyAnalyzedFilename=DataList[i].GetFileName();
+        size_t found = inputFileName.find(alreadyAnalyzedFilename);
+        if(found!=std::string::npos)
+        {
+            countDoublet++;
+            alreadyAnalyzed=true;
+        }
+    }
+    if(alreadyAnalyzed)
+    {
+        cout<<"[WARNING] File "<<alreadyAnalyzedFilename<<" has already been analyzed ";
+        if(countDoublet==1) 
+            cout<<" once."<<endl;
+        if(countDoublet==2) 
+            cout<<" twice."<<endl;
+        if(countDoublet>2) 
+            cout<< countDoublet <<" times."<<endl;
+        cout<<"[WARNING] Do you want to analyze this file again?"<<endl;
+        cout<<"1) yes (analyzed data results will be duplicated)"<<endl;
+        cout<<"2) no"<<endl;
+        string reply;
+        cin>>reply;
+        
+        if(reply =="1" || reply=="y" || reply=="Y" || reply=="yes" || reply=="YES" || reply=="Yes")
+        {
+            startgui=true;
+            cout<<"[INFO] Start analysis"<<endl;
+        }
+        
+        if(reply =="2" || reply=="n" || reply=="N" || reply=="no" || reply=="NO" || reply=="No")
+        {
+            startgui=false;
+            cout<<"[INFO] Analysis stop."<<endl;
+        }
+        
+    }
+    
+    
+    if(startgui)
+    {
+        TApplication app("App", &argc, argv);
+        MQLOG(INFO)<<"Run start";
+        SidsGui* fSidsAnalysisGui = new SidsGui(gClient->GetRoot(), 1000, 600, ConfigParameter);
+        fSidsAnalysisGui->MapWindow();
+        app.Run();
+    }
 
     return 0;
 }

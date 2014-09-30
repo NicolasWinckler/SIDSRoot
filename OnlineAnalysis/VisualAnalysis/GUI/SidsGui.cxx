@@ -361,6 +361,8 @@ void SidsGui::InitParameters()
     delete DecayTree;
     
     int binNumber=(int)DataList.size();
+    if(binNumber<=3)
+        binNumber=3;
     fNEC = new TH1I("NEC","Number of EC vs injection number",binNumber,1.,(Double_t)binNumber);
     fPfreq = new TH1F("ParentFreq","Frequency of parent ions vs injection number",binNumber,1.,(Double_t)binNumber);
     for(unsigned int i(0); i<DataList.size(); i++)
@@ -369,6 +371,8 @@ void SidsGui::InitParameters()
         float freq=DataList[i].GetCoolParentFreq();
         fNEC->SetBinContent(i+1,NumbEC);
         fPfreq->SetBinContent(i+1,freq);
+        
+        
     }
     
 }
@@ -865,6 +869,7 @@ void SidsGui::DoDraw()
                 
                 histoname+="_Rebinned";
 
+                fCanvas2->SetCrosshair();
                 fCanvas2->cd();
     
                 TH2D* histo=dynamic_cast<TH2D*>(f2DHisto[i]->RebinX(2,histoname.c_str()));
