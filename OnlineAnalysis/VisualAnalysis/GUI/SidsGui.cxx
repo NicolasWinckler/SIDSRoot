@@ -222,7 +222,8 @@ void SidsGui::SetupGUI()
    
     
     //TFile* rootfile0 = new TFile(fFileName);
-    RootFileManager(fInputFile);
+    if(!RootFileManager(fInputFile,fFileName))
+        DoExit();
     
     if(fNEC)
         AddToListTree(fNEC);
@@ -395,7 +396,8 @@ void SidsGui::OpenRootFile()
     //cout<<boost::filesystem::basename(fFileName.Data())<<endl;
     
     fInputFile=TFile::Open(fFileName,"READ");
-    RootFileManager(fInputFile, fFileName);
+    if(!RootFileManager(fInputFile,fFileName))
+        DoExit();
 }
 
 
@@ -459,15 +461,15 @@ int SidsGui::RootFileManager(TFile* file, const TString & filename)
     else
     {
         
-        cout<<"[INFO] Opening file"<< filename <<endl;
-        fInputFile=TFile::Open(fFileName,"READ");
-        
+        cout<<"[ERROR] Could not open the file " << filename <<endl;
+        return 0;
+        /*file=TFile::Open(filename,"READ");
         if (!file->IsOpen()) 
         {
           cout<<"[ERROR] Cannot open file " << file->GetName() <<endl;
 
           return 0;
-        }
+        }else cout<<"[SUPER] open file " << file->GetName() <<endl;*/
     }
         
 
