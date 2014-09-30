@@ -871,6 +871,7 @@ void SidsGui::DoDraw()
                 if(histo)
                 {
                     //histo->SetMaximum(5.e-7);
+                    histo->SetStats(kFALSE);
                     histo->Draw("zcol");
                 }
                 
