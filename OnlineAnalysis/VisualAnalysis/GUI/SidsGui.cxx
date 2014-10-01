@@ -312,12 +312,12 @@ void SidsGui::SetupGUI()
    
    ////////////////////////////////////////////////////// 2nd layer
    TGHorizontalFrame *hf3 = new TGHorizontalFrame(this, 10, 10);
-
+/*
    fStatus = new TGLabel(hf3, new TGHotString(gReadyMsg));
    fStatus->SetTextJustify(kTextLeft);
    fStatus->SetTextColor(0x0000ff);
    hf3->AddFrame(fStatus, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY,10, 10, 10, 10));
-   
+*/   
    
    TGVerticalFrame *ExitAndValidFrame = new TGVerticalFrame(hf3, 10, 10);
    
@@ -800,8 +800,8 @@ void SidsGui::DataDropped(TGListTreeItem *, TDNDData *data)
    // Handle the drop event in the TGListTree. This will just create a new
    // list tree item and copy the received data into it.
 
-   fStatus->SetTextColor(0xff0000);
-   fStatus->ChangeText("I received data!!!");
+   //fStatus->SetTextColor(0xff0000);
+   //fStatus->ChangeText("I received data!!!");
    if (data) 
    {
       const TGPicture *pic = 0;
@@ -843,9 +843,9 @@ void SidsGui::DataDropped(TGListTreeItem *, TDNDData *data)
          fListTree->SetToolTipItem(itm, (const char *)data->fData);
       }
       if (itm) itm->SetDNDSource(kTRUE);
-      fStatus->ChangeText(tmp);
+      //fStatus->ChangeText(tmp);
    }
-   TTimer::SingleShot(3000, "SidsGui", this, "ResetStatus()");
+   //TTimer::SingleShot(3000, "SidsGui", this, "ResetStatus()");
    fCanvas1->Update();
    fCanvas2->cd();
    fCanvas2->Update();
@@ -934,6 +934,7 @@ void SidsGui::DoDraw()
                 fCanvas2->Update();
                 
                 /// canvas1 PAD1 projection on frequency axis
+                fCanvas1->SetCrosshair();
                 fCanvas1->cd(1);
                 
                 Int_t BinPWindow=fParConfig.GetValue<int>("BinPWindow"); 
@@ -1267,6 +1268,7 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
     int Rebinning=fParConfig.GetValue<int>("BinningTraces");
     int NPeak2Search=2;
     int NfounPeak=0;
+    float DistanceHz=1584.;
     hist2d->GetXaxis()->UnZoom();
     hist2d->GetYaxis()->UnZoom();
     
@@ -1300,9 +1302,16 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
     NfounPeak = sp->Search(fHisto_px,sigma,option,threshold);
     Float_t *xpeaks = sp->GetPositionX();
     fParentFreq=xpeaks[0];
+    
+    float daughterfreq=0.;
+    if(sp->GetNPeaks()>1)
+        daughterfreq=xpeaks[1];
+    
     delete sp;
     int parentBin=fHisto_px->GetXaxis()->FindBin(fParentFreq);
-    //cout<<"xpeaks[0] = "<<xpeaks[0]<<endl;
+    int daughterBin=fHisto_px->GetXaxis()->FindBin(fParentFreq+DistanceHz);
+    //cout<<"[INFO] freqD-freqP="<<daughterfreq-fParentFreq<<endl;
+    
     
     int binmin=0;
     int binmax=0;
@@ -1360,13 +1369,13 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
     
     if(!fDaughterTrace)
     {
-        if((BinDist+parentBin-BinDWindow)>=fHisto_px->GetXaxis()->GetFirst())
-            binmin=BinDist+parentBin-BinDWindow;
+        if((daughterBin-BinDWindow)>=fHisto_px->GetXaxis()->GetFirst())
+            binmin=daughterBin-BinDWindow;
         else
             binmin=fHisto_px->GetXaxis()->GetFirst();
         
-        if((BinDist+parentBin+BinDWindow)<=fHisto_px->GetXaxis()->GetLast())
-            binmax=BinDist+parentBin+BinDWindow;
+        if((daughterBin+BinDWindow)<=fHisto_px->GetXaxis()->GetLast())
+            binmax=daughterBin+BinDWindow;
         else
             binmax=fHisto_px->GetXaxis()->GetLast();
         
@@ -1385,23 +1394,24 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
         }
         
         
-        if((BinDist+parentBin-BinDWindow)>=fHisto_px->GetXaxis()->GetFirst())
-            binmin=BinDist+parentBin-BinDWindow;
+        if((daughterBin-BinDWindow)>=fHisto_px->GetXaxis()->GetFirst())
+            binmin=daughterBin-BinDWindow;
         else
             binmin=fHisto_px->GetXaxis()->GetFirst();
         
-        if((BinDist+parentBin+BinDWindow)<=fHisto_px->GetXaxis()->GetLast())
-            binmax=BinDist+parentBin+BinDWindow;
+        if((daughterBin+BinDWindow)<=fHisto_px->GetXaxis()->GetLast())
+            binmax=daughterBin+BinDWindow;
         else
             binmax=fHisto_px->GetXaxis()->GetLast();
         
         fDaughterTrace = hist2d->ProjectionY("Daughter",binmin,binmax);
         fDaughterTrace->Rebin(Rebinning);
         AddToListTree(fDaughterTrace);
+        
         /*
         delete fDaughterTrace;
         fDaughterTrace=NULL;
-        fDaughterTrace = hist2d->ProjectionY("Daughter",BinDist+parentBin-BinDWindow,BinDist+parentBin+BinDWindow);
+        fDaughterTrace = hist2d->ProjectionY("Daughter",daughterBin-BinDWindow,daughterBin+BinDWindow);
         fDaughterTrace->Rebin(Rebinning);
         */
     }
