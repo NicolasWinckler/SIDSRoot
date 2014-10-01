@@ -922,27 +922,50 @@ void SidsGui::DoDraw()
     /// canvas1 PAD4 kicker signals
     fCanvas1->cd(4);
     bool drawsame=false;
+    gPad->SetFillColor(kBlack);
     for(unsigned int i(0);i<f1DHisto.size();i++)
     {
         if(f1DHisto[i])
         {
             string histoname=string(f1DHisto[i]->GetName());
             size_t found = histoname.find(histokickerID);
+            
+            size_t foundC1 = histoname.find("C1");
+            size_t foundC2 = histoname.find("C2");
+            size_t foundC3 = histoname.find("C3");
+            size_t foundC4 = histoname.find("C4");
+            
+            size_t found_ext = histoname.find("_ext");
 
             if(found!=std::string::npos)
             {
-                if(drawsame)
-                {
-                    f1DHisto[i]->SetLineColor(i);
-                    f1DHisto[i]->Draw("SAME");
-                }
-                else
-                {
-                    f1DHisto[i]->SetLineColor(i);
-                    f1DHisto[i]->Draw();
-                    drawsame=true;
-                }
                 
+                if(foundC1!=std::string::npos)
+                    f1DHisto[i]->SetLineColor(kYellow);
+                    
+                if(foundC2!=std::string::npos)
+                    f1DHisto[i]->SetLineColor(kMagenta);
+                
+                if(foundC3!=std::string::npos)
+                    f1DHisto[i]->SetLineColor(kCyan);
+                
+                if(foundC4!=std::string::npos)
+                    f1DHisto[i]->SetLineColor(kGreen);
+                
+                    
+                    
+                if(found_ext!=std::string::npos)
+                {
+                    if(drawsame)
+                    {
+                        f1DHisto[i]->Draw("SAME");
+                    }
+                    else
+                    {
+                        f1DHisto[i]->Draw();
+                        drawsame=true;
+                    }
+                }
                 
             }
         }
