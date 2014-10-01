@@ -39,7 +39,7 @@
 #include "TClass.h"
 #include "TKey.h"
 #include "TSpectrum.h"
-
+#include <TGComboBox.h>
 #include "TGStatusBar.h"
 #include "TVirtualPadEditor.h"
 #include <TGClient.h>
@@ -114,7 +114,7 @@ public:
     void RemoveDecay();
     void DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *);
     void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
-
+    void ChangeMode(Int_t BoxID);
 protected:
     TRootEmbeddedCanvas  *fEc;                  // embedded canvas (left))
     TRootEmbeddedCanvas  *fEc2;                 // embedded canvas (right)

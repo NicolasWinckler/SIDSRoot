@@ -270,15 +270,23 @@ void SidsGui::SetupGUI()
    fControlFrame->AddFrame(fFileQualityTag, new TGLayoutHints( kLHintsExpandX,2,2,5,5));
    
       
-   
+   TGHorizontalFrame *hfrmDrawNBox = new TGHorizontalFrame(fControlFrame, 2, 2);
    /// DRAW BUTTON
-   TGTextButton *draw = new TGTextButton(fControlFrame,"&Draw");
+   TGTextButton *draw = new TGTextButton(hfrmDrawNBox,"&Draw");
    draw->Connect("Clicked()","SidsGui",this,"DoDraw()");
    
-   fControlFrame->AddFrame(draw, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
-   
-   
-   
+   hfrmDrawNBox->AddFrame(draw, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
+   //*
+   TGComboBox *combo = new TGComboBox(hfrmDrawNBox);
+   combo->AddEntry("RSA30", SIDS::kRSA30);
+   combo->AddEntry("RSA51", SIDS::kRSA51);
+   combo->AddEntry("RSA52", SIDS::kRSA52);
+   combo->Connect("Selected(Int_t)", "SidsGui", this, "ChangeMode(Int_t)");
+   combo->Select(SIDS::kRSA51);
+   hfrmDrawNBox->AddFrame(combo, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
+    combo->Resize(100, 20);
+   // */
+   fControlFrame->AddFrame(hfrmDrawNBox, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
    
    /// ADD DECAY BUTTON
    TGTextButton *AddDecay = new TGTextButton(fControlFrame,"&Add EC-Decay");
@@ -346,6 +354,43 @@ void SidsGui::SetupGUI()
    DontCallClose(); // to avoid double deletions.
    MapRaised();
 }
+
+
+//______________________________________________________________________________
+void SidsGui::ChangeMode(Int_t BoxID)
+{
+    
+    switch(BoxID)
+    {
+        case SIDS::kRSA30 :
+        {
+            string DetId="RSA30";
+            fParConfig.SetValue("DetectorID",DetId);
+            DoDraw();
+            break;
+        }
+        
+        case SIDS::kRSA51 :
+        {
+            string DetId="RSA51";
+            fParConfig.SetValue("DetectorID",DetId);
+            DoDraw();
+            break;
+        }
+        
+        case SIDS::kRSA52 :
+        {
+            string DetId="RSA52";
+            fParConfig.SetValue("DetectorID",DetId);
+            DoDraw();
+            break;
+        }
+    
+    
+    }
+    
+}
+
 
 //______________________________________________________________________________
 void SidsGui::InitParameters()

@@ -154,9 +154,9 @@ int main(int argc, char** argv)
     int countDoublet=0;
     bool alreadyAnalyzed=false;
     bool startgui=true;
-    for(unsigned int i(0); i<DataList.size(); i++)
+    for(unsigned int k(0); k<DataList.size(); k++)
     {
-        alreadyAnalyzedFilename=DataList[i].GetFileName();
+        alreadyAnalyzedFilename=DataList[k].GetFileName();
         size_t found = inputFileName.find(alreadyAnalyzedFilename);
         if(found!=std::string::npos)
         {
@@ -184,13 +184,19 @@ int main(int argc, char** argv)
             startgui=true;
             cout<<"[INFO] Start analysis"<<endl;
         }
-        
-        if(reply =="2" || reply=="n" || reply=="N" || reply=="no" || reply=="NO" || reply=="No")
+        else
         {
-            startgui=false;
-            cout<<"[INFO] Analysis stop."<<endl;
+            if(reply =="2" || reply=="n" || reply=="N" || reply=="no" || reply=="NO" || reply=="No")
+            {
+                startgui=false;
+                cout<<"[INFO] Analysis stop."<<endl;
+            }
+            else
+            {
+                cout<<"[ERROR] Given input not valid"<<endl;
+                startgui=false;
+            }
         }
-        
     }
     
     
