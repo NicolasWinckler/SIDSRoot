@@ -925,7 +925,8 @@ void SidsGui::DoDraw()
                 
                 if(histo)
                 {
-                    //histo->SetMaximum(5.e-7);
+                    double zmax=fParConfig.GetValue<double>("Zmax");
+                    histo->SetMaximum(zmax);
                     histo->SetStats(kFALSE);
                     histo->Draw("zcol");
                 }

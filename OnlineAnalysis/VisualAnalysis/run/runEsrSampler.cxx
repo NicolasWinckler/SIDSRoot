@@ -27,7 +27,7 @@ using std::stringstream;
 
 int main(int argc, char** argv)
 {
-    if (argc != 24)
+    if (argc != 25)
     {
         MQLOG(ERROR)<<"Number of argument incorrect. ("<<argc<<" instead of 24)";
         MQLOG(INFO) <<"Script usage: startVisualAnalysis \t userName inputFile \n";
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
              << "\t\t eventRate numIoTreads\n"
              << "\t\toutputSocketType outputSndBufSize outputMethod outputAddress\n"
              << "\t\t binDistancePDfreq binPWindow binDWindow binningTraces binningFreqTH2\n" 
-             << "\t\t binSigmaPeak thresholdPeak detectorID detectorSuffix kickerPrefix binZoomTH2Window\n"   
+             << "\t\t binSigmaPeak thresholdPeak detectorID detectorSuffix kickerPrefix binZoomTH2Window zmax\n"   
                 << endl;
         return 1;
     }
@@ -139,7 +139,10 @@ int main(int argc, char** argv)
     ConfigParameter.SetValue("BinZoomTH2Window",BinZoomTH2Window);
     ++i;
     
-    
+    double zmax;
+    stringstream(argv[i]) >> zmax;
+    ConfigParameter.SetValue("Zmax",zmax);
+    ++i;
     
     string outputfilename=ConfigParameter.GetValue<string>("OutputFile");
     string treename=ConfigParameter.GetValue<string>("TreeName");
