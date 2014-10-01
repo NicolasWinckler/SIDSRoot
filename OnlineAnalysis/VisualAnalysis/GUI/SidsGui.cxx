@@ -919,7 +919,10 @@ void SidsGui::DoDraw()
                 fCanvas2->SetCrosshair();
                 fCanvas2->cd();
     
-                TH2D* histo=dynamic_cast<TH2D*>(f2DHisto[i]->RebinX(2,histoname.c_str()));
+                //TH2D* histo=dynamic_cast<TH2D*>(f2DHisto[i]->RebinX(2,histoname.c_str()));
+                TH2D* histo=dynamic_cast<TH2D*>(f2DHisto[i]->Clone());
+                
+                
                 if(histo)
                 {
                     //histo->SetMaximum(5.e-7);
