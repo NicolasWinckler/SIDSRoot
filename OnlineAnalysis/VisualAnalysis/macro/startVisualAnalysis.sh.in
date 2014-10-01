@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ${ESRDATAPATH}
+cd $ESRDATAPATHIN
 buffSize="1000" # zeromq high-water mark is in messages
 dataFormat="Boost"
 ID="101"
@@ -8,7 +8,7 @@ userName=$1
 treeName="SIDSdecayData"
 branch="EsrInjData."
 #outputFile="@SIDS_SOURCE_DIR@/AnalysisOutput/Osc/Online/VisualAnalysis/SIDSDecayData.root"
-outputFile="/hera/sids/AnalysisResults/visual/SidsVisualDecayResults.root
+outputFile="$ESRDATAPATHOUT/SidsVisualDecayResults.root"
 eventRate="0"
 numIoThreads="1"
 outputSocketType="push"

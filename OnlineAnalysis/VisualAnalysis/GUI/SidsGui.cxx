@@ -921,8 +921,36 @@ void SidsGui::DoDraw()
     
     /// canvas1 PAD4 kicker signals
     fCanvas1->cd(4);
+    
+    
+    double YMax=-1.e+99;
+    double YMin=1.e+99;
+    
+    for(unsigned int i(0);i<f1DHisto.size();i++)
+    {
+        if(f1DHisto[i])
+        {
+            string histoname=string(f1DHisto[i]->GetName());
+            size_t found = histoname.find(histokickerID);
+            size_t found_ext = histoname.find("_ext");
+            if(found!=std::string::npos)
+            {
+                if(found_ext!=std::string::npos)
+                {
+                    if(f1DHisto[i]->GetBinContent(f1DHisto[i]->GetMinimumBin())<=YMin)
+                        YMin=f1DHisto[i]->GetBinContent(f1DHisto[i]->GetMinimumBin());
+
+                    if(f1DHisto[i]->GetBinContent(f1DHisto[i]->GetMaximumBin())>=YMax)
+                        YMax=f1DHisto[i]->GetBinContent(f1DHisto[i]->GetMaximumBin());
+                }
+            }
+        }
+        
+    }
+        
+    
     bool drawsame=false;
-    gPad->SetFillColor(kBlack);
+    //gPad->SetFillColor(kBlack);
     for(unsigned int i(0);i<f1DHisto.size();i++)
     {
         if(f1DHisto[i])
@@ -956,6 +984,7 @@ void SidsGui::DoDraw()
                     
                 if(found_ext!=std::string::npos)
                 {
+                    f1DHisto[i]->GetYaxis()->SetRangeUser(YMin-0.2*fabs(YMin),YMax+0.2*fabs(YMax));
                     if(drawsame)
                     {
                         f1DHisto[i]->Draw("SAME");
