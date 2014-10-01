@@ -1273,7 +1273,17 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
     }
     else
     {
-        fHisto_px->GetXaxis()->UnZoom();
+        //fHisto_px->GetXaxis()->UnZoom();
+        
+        TGListTreeItem *item=fListTree->FindChildByName(fBaseLTI,fHisto_px->GetName());
+        fListTree->DeleteItem(item);
+        if(fHisto_px)
+        {
+            delete fHisto_px;
+            fHisto_px=NULL;
+        }
+        fHisto_px=hist2d->ProjectionX();
+        AddToListTree(fHisto_px);
         /*
         delete fHisto_px;
         fHisto_px=NULL;
@@ -1312,7 +1322,30 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
     }
     else
     {
-        fParentTrace->GetXaxis()->UnZoom();
+        TGListTreeItem *item=fListTree->FindChildByName(fBaseLTI,fParentTrace->GetName());
+        fListTree->DeleteItem(item);
+        if(fParentTrace)
+        {
+            delete fParentTrace;
+            fParentTrace=NULL;
+        }
+        
+        if((parentBin-BinPWindow)>=fHisto_px->GetXaxis()->GetFirst())
+            binmin=parentBin-BinPWindow;
+        else
+            binmin=fHisto_px->GetXaxis()->GetFirst();
+        
+        if((parentBin+BinPWindow)<=fHisto_px->GetXaxis()->GetLast())
+            binmax=parentBin+BinPWindow;
+        else
+            binmax=fHisto_px->GetXaxis()->GetLast();
+        
+        
+        fParentTrace = hist2d->ProjectionY("Parent",binmin,binmax);
+        fParentTrace->Rebin(Rebinning);
+        
+        AddToListTree(fParentTrace);
+        //fParentTrace->GetXaxis()->UnZoom();
         /*
         delete fParentTrace;
         fParentTrace=NULL;
@@ -1339,7 +1372,28 @@ void SidsGui::FindTraces(TH2D* hist2d, Int_t BinPWindow, Int_t BinDWindow, Int_t
     }
     else
     {
-        fDaughterTrace->GetXaxis()->UnZoom();
+        TGListTreeItem *item=fListTree->FindChildByName(fBaseLTI,fDaughterTrace->GetName());
+        fListTree->DeleteItem(item);
+        if(fDaughterTrace)
+        {
+            delete fDaughterTrace;
+            fDaughterTrace=NULL;
+        }
+        
+        
+        if((BinDist+parentBin-BinDWindow)>=fHisto_px->GetXaxis()->GetFirst())
+            binmin=BinDist+parentBin-BinDWindow;
+        else
+            binmin=fHisto_px->GetXaxis()->GetFirst();
+        
+        if((BinDist+parentBin+BinDWindow)<=fHisto_px->GetXaxis()->GetLast())
+            binmax=BinDist+parentBin+BinDWindow;
+        else
+            binmax=fHisto_px->GetXaxis()->GetLast();
+        
+        fDaughterTrace = hist2d->ProjectionY("Daughter",binmin,binmax);
+        fDaughterTrace->Rebin(Rebinning);
+        AddToListTree(fDaughterTrace);
         /*
         delete fDaughterTrace;
         fDaughterTrace=NULL;
