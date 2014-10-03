@@ -13,6 +13,13 @@ SIDSFileManager::SIDSFileManager() : fDirName()
     
 }
 
+SIDSFileManager::SIDSFileManager(const string &dirname, const vector<string> &fileList)
+{
+    SetDirectory(dirname);
+    SetInputList(fileList);
+    GetNonAnalyzedFiles();
+}
+
 SIDSFileManager::~SIDSFileManager()
 {
     
@@ -41,7 +48,7 @@ int SIDSFileManager::SetDirectory(const string &dirname)
     {
         if(has_suffix(entry->d_name, ".root"))
         {
-            cout << entry->d_name << endl;
+            //cout << entry->d_name << endl;
             fDirFileList.push_back(string(entry->d_name));
         }
     }
@@ -67,7 +74,6 @@ void SIDSFileManager::CountDuplicates(const vector<string> &fileList)
     UniqueFileInList.resize( std::distance(UniqueFileInList.begin(),it) );
     for(auto p : UniqueFileInList)
     {
-        cout<<p<<endl;
         int counduplicates=0;
         for(auto q : list)
         {
@@ -79,28 +85,58 @@ void SIDSFileManager::CountDuplicates(const vector<string> &fileList)
         }
     }
     
-    
-    //*
-    for(auto r : fAnalyzedFiles)
-    {
-        cout<<"[INFO] "<<r.first<<" analyzed "<<r.second << " times." <<endl;
-    }
-    //*/
-    
 }
 
-void SIDSFileManager::Compare()
-{
-    vector<string> NonAnalyzedFiles;
-    
+void SIDSFileManager::GetNonAnalyzedFiles()
+{    
     for(auto p : fDirFileList)
     {
         if(fAnalyzedFiles.count(p)==0)
-            NonAnalyzedFiles.push_back(p);
+            fNonAnalyzedFiles.push_back(p);
     }
-    cout<<"Files not analized:"<<endl;
-    for(auto p : NonAnalyzedFiles)
+    
+}
+
+
+void SIDSFileManager::PrintAll(bool detail)
+{
+    MQLOG(INFO)<<"*********************************";
+    MQLOG(INFO)<<"***** LIST OF ALL FILES *****";
+    MQLOG(INFO)<<"Root files found in directory: "<< fDirName;
+    MQLOG(INFO)<<" ";
+    for(auto p : fDirFileList)
     {
-        cout<<p<<endl;
+        MQLOG(INFO)<<p;
     }
+    MQLOG(INFO)<<" ";
+    MQLOG(INFO)<<"*********************************";
+}
+
+void SIDSFileManager::PrintAnalyzed(bool detail)
+{
+    MQLOG(INFO)<<"*********************************";
+    MQLOG(INFO)<<"***** LIST OF ALREADY ANALYZED FILES *****";
+    MQLOG(INFO)<<" ";
+    for(auto p : fAnalyzedFiles)
+    {
+        if(detail)
+            MQLOG(INFO)<<p.second<< " analysis for file "<<p.first ;
+        else
+            MQLOG(INFO)<<p.first ;
+    }
+    MQLOG(INFO)<<" ";
+    MQLOG(INFO)<<"*********************************";
+}
+
+void SIDSFileManager::PrintNotAnalyzed(bool detail)
+{
+    MQLOG(INFO)<<"*********************************";
+    MQLOG(INFO)<<"***** LIST OF NOT YET ANALYZED FILES *****";
+    MQLOG(INFO)<<" ";
+    for(auto p : fNonAnalyzedFiles)
+    {
+        MQLOG(INFO)<<p;
+    }
+    MQLOG(INFO)<<" ";
+    MQLOG(INFO)<<"*********************************";
 }

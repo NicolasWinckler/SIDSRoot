@@ -13,7 +13,7 @@
 #include <vector>
 #include <map>
 #include <string>
-
+#include "FairMQLogger.h"
 #include "dirent.h"
 #include <unordered_set>
 #include <iterator>
@@ -32,18 +32,32 @@ public:
 class SIDSFileManager
 {
 public:
+    enum
+    {
+        kPrintAll,
+        kPrintAnalyzed,
+        kPrintNotAnalyzed,
+        kDetail
+    };
+    
     SIDSFileManager();
+    SIDSFileManager(const string &dirname, const vector<string> &fileList);
     virtual ~SIDSFileManager();
-    void SetInputList(const vector<string> &fileList );
-    int SetDirectory(const string &dir);
-    void Compare();
+    
+    void PrintAll(bool detail=false);
+    void PrintAnalyzed(bool detail=false);
+    void PrintNotAnalyzed(bool detail=false);
     
 protected:
     string fDirName;
     vector<string> fDirFileList;
     vector<string> fInputList;
     map<string,int> fAnalyzedFiles;
+    vector<string> fNonAnalyzedFiles;
     
+    void SetInputList(const vector<string> &fileList );
+    int SetDirectory(const string &dir);
+    void GetNonAnalyzedFiles();
     bool has_suffix(const string& s, const string& suffix);
     void CountDuplicates(const vector<string> &fileList);
 };

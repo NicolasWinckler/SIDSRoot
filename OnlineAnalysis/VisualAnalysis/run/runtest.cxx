@@ -84,11 +84,7 @@ int main(int argc, char** argv)
     string dir="/Users/winckler/fair/exp/SIDSRoot/build";
 
     
-    SIDSFileManager fileman;
-    fileman.SetDirectory(dir);
-    fileman.SetInputList(analyzedFiles);
-    fileman.Compare();
-    
+    SIDSFileManager fileman(dir,analyzedFiles);
     return 0;
 }
 

@@ -31,6 +31,8 @@ If (Boost_FOUND)
   configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/startEsrSink.sh.in ${SIDS_BINARY_DIR}/bin/startEsrSink.sh )
   configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/startPushPull_esr.sh.in ${SIDS_BINARY_DIR}/bin/startEsrPushPull.sh )
   configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/startVisualAnalysis.sh.in ${SIDS_BINARY_DIR}/bin/startVisualAnalysis.sh )
+  configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/showfiles.sh.in ${SIDS_BINARY_DIR}/bin/showfiles.sh )
+
 EndIf (Boost_FOUND)
 
 set(LINK_DIRECTORIES
@@ -79,7 +81,7 @@ If (Boost_FOUND)
     RunTest
     EsrMQSamplerBoost
     EsrMQFileSinkBoost
-    RootFileInfo
+    ShowFile
   )
 
   set(Exe_Source
