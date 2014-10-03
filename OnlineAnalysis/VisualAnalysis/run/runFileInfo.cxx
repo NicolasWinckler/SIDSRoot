@@ -1,44 +1,16 @@
 /* 
- * File:   runtest.cxx
+ * File:   runFileInfo.cxx
  * Author: winckler
  *
- * Created on September 16, 2014, 3:57 PM
+ * Created on October 3, 2014, 10:22 PM
  */
+
 
 #include <cstdlib>
 #include <vector>
 #include <map>
 #include <string>
 
-#include "TKey.h"
-#include "TROOT.h"
-#include "TApplication.h"
-#include "TSystem.h"
-#include "TGFrame.h"
-#include "TGButton.h"
-#include "TGLabel.h"
-#include "TGMenu.h"
-#include "TGFileDialog.h"
-#include "TBrowser.h"
-#include "TRootEmbeddedCanvas.h"
-#include "TRootHelpDialog.h"
-#include "TCanvas.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TF2.h"
-#include "TGraph.h"
-#include "TImage.h"
-#include "TRandom.h"
-#include "TGMsgBox.h"
-#include "TGPicture.h"
-#include "TGListTree.h"
-#include "TObjString.h"
-#include "TMessage.h"
-#include "TTimer.h"
-#include "TGDNDManager.h"
-#include "TString.h"
-#include "TFile.h"
-#include "TClass.h"
 #include "Riostream.h"
 #include "header.h"
 

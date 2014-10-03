@@ -56,6 +56,7 @@ Set(SRCS
 If (Boost_FOUND)
   Set(NO_DICT_SRCS
     data/MQconfig.cxx
+    data/SIDSFileManager.cxx
     MQDevice/EsrSidsSampler.cxx
     MQDevice/EsrFileSink.cxx
     MQTask/EsrSamplerTask.cxx
@@ -78,12 +79,14 @@ If (Boost_FOUND)
     RunTest
     EsrMQSamplerBoost
     EsrMQFileSinkBoost
+    RootFileInfo
   )
 
   set(Exe_Source
     run/runtest.cxx
     run/runEsrSampler.cxx
     run/runEsrFileSink.cxx
+    run/runFileInfo.cxx
     )
 
 
