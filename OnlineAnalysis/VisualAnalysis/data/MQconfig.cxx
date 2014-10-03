@@ -58,7 +58,7 @@ MQconfig::MQconfig()
     fKeyDoubleValues.push_back("BinSigmaPeak");
     fKeyDoubleValues.push_back("ThresholdPeak");
     fKeyDoubleValues.push_back("Zmax");
-    
+    fKeyDoubleValues.push_back("ZSliderScale");
     /////////////////////////////////////////////////////////////////////
     /// create and init keys in maps
     

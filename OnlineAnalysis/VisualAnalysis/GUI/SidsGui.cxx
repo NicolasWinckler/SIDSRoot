@@ -56,10 +56,10 @@ SidsGui::SidsGui(const TGWindow *p, int w, int h,MQconfig SamplerConfig, std::st
         fMenuHelp(NULL), fCanvas1(NULL), fCanvas2(NULL), fListTree(NULL),
         fBaseLTI(NULL), fStatus(NULL), fStatusBar(NULL), 
         fGraph(NULL), fHisto_px(NULL), fParentTrace(NULL), fDaughterTrace(NULL),
-        fNEC(NULL), fPfreq(NULL), fControlFrame(NULL),
+        fNEC(NULL), fPfreq(NULL), fCurrentHisto(NULL), fVslider1(NULL), fControlFrame(NULL),
         fFileName(Filename.c_str()), fFileInfo(), 
         fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.),
-        fParConfig(SamplerConfig), fInputFile(NULL),
+        fParConfig(SamplerConfig), fInputFile(NULL), fSliderScale(1.),
         fDecayCounter(0), fHisto1DCounter(0), fHisto2DCounter(0), fHeaderCounter(0),
         fReadyToSend(false), fSampler(false)
 
@@ -239,8 +239,10 @@ void SidsGui::SetupGUI()
    fListTree->Connect("DataDropped(TGListTreeItem*, TDNDData*)", "SidsGui",
                       this, "DataDropped(TGListTreeItem*,TDNDData*)");
 
-   ////////////////////////////////////////////////////// 1st layer 2nd col
+   ////////////////////////////////////////////////////// 
    ///
+   
+   
    
    fEc2 = new TRootEmbeddedCanvas ("AnalysisCanvas",hfrm,600,400);
    fEc2->SetDNDTarget(kTRUE);
@@ -256,6 +258,20 @@ void SidsGui::SetupGUI()
    
    
    hfrm->AddFrame(fEc2, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
+   
+   
+   
+   /// Z AXIS SLIDER
+   
+   fVslider1 = new TGDoubleVSlider(hfrm, 100, kDoubleScaleBoth, 0, kVerticalFrame,GetDefaultFrameBackground(), kTRUE);
+   InitSlider();
+   fVslider1->Connect("PositionChanged()", "SidsGui", this, "DoSlider()");
+   
+
+   TGLayoutHints* fBly = new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandY, 0, 0, 0, 0);
+   
+   hfrm->AddFrame(fVslider1,fBly);
+   
    
    fControlFrame = new TGVerticalFrame(hfrm, 200, 400);
    
@@ -282,7 +298,7 @@ void SidsGui::SetupGUI()
    combo->AddEntry("RSA51", SIDS::kRSA51);
    combo->AddEntry("RSA52", SIDS::kRSA52);
    combo->Connect("Selected(Int_t)", "SidsGui", this, "ChangeMode(Int_t)");
-   combo->Select(SIDS::kRSA51);
+   //combo->Select(SIDS::kRSA51);
    hfrmDrawNBox->AddFrame(combo, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
     combo->Resize(100, 20);
    // */
@@ -311,13 +327,12 @@ void SidsGui::SetupGUI()
    
    
    ////////////////////////////////////////////////////// 2nd layer
+   //TGHorizontalFrame *hf3 = new TGHorizontalFrame(this, 10, 10);
    TGHorizontalFrame *hf3 = new TGHorizontalFrame(this, 10, 10);
-/*
-   fStatus = new TGLabel(hf3, new TGHotString(gReadyMsg));
-   fStatus->SetTextJustify(kTextLeft);
-   fStatus->SetTextColor(0x0000ff);
-   hf3->AddFrame(fStatus, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY,10, 10, 10, 10));
-*/   
+   //hf3 = new TGVerticalFrame(this, 0, 0, 0);
+   
+   combo->Select(SIDS::kRSA51);
+   
    
    TGVerticalFrame *ExitAndValidFrame = new TGVerticalFrame(hf3, 10, 10);
    
@@ -395,6 +410,8 @@ void SidsGui::ChangeMode(Int_t BoxID)
 //______________________________________________________________________________
 void SidsGui::InitParameters()
 {
+    if(!fParConfig.GetValue<string>("DetectorID").empty())
+        fDetectorID=fParConfig.GetValue<string>("DetectorID");
     fFileName=fParConfig.GetValue<string>("InputFile").c_str();
     string outputfilename=fParConfig.GetValue<string>("OutputFile");
     string treename=fParConfig.GetValue<string>("TreeName");
@@ -851,6 +868,42 @@ void SidsGui::DataDropped(TGListTreeItem *, TDNDData *data)
    fCanvas2->Update();
 }
 
+
+
+void SidsGui::InitSlider()
+{
+    double zmax=fParConfig.GetValue<double>("Zmax");
+    if(fDetectorID=="RSA52") 
+        zmax+=2.5e-8;
+    fSliderScale=fParConfig.GetValue<double>("ZSliderScale");
+    //double zmin=(9.3000E-09+1.4898E-08)/2.;
+    //zmax=50e-8;
+    double slidemin=0.;
+    double slidemax=100.;
+    double slidepos=zmax/fSliderScale;
+    //fVslider1->SetConstrained();
+    fVslider1->SetRange(slidemin,slidemax);
+    fVslider1->SetPosition(slidemin,slidepos);
+}
+
+void SidsGui::DoSlider()
+{
+    fCanvas2->cd();
+    //
+    //fCurrentHisto->GetZaxis()->SetRange(,);
+
+     if(fCurrentHisto)
+     {
+          fCurrentHisto->SetMaximum(fSliderScale*fVslider1->GetMaxPosition());
+          fCurrentHisto->SetMinimum(fSliderScale*fVslider1->GetMinPosition());
+          fCurrentHisto->Draw("zcol");
+     }
+    fCanvas2->Modified();
+    fCanvas2->Update();
+}
+
+
+
 //______________________________________________________________________________
 void SidsGui::DoDraw() 
 {
@@ -894,6 +947,7 @@ void SidsGui::DoDraw()
                 }*/
                 //fHisto_px=f2DHisto[i]->ProjectionX();
                 //Int_t binMax=fHisto_px->GetMaximumBin();
+                
                 Int_t zoomwindow=fParConfig.GetValue<Int_t>("BinZoomTH2Window");
                 Int_t binMax=f2DHisto[i]->ProjectionX()->GetMaximumBin();
                 
@@ -920,15 +974,27 @@ void SidsGui::DoDraw()
                 fCanvas2->cd();
     
                 //TH2D* histo=dynamic_cast<TH2D*>(f2DHisto[i]->RebinX(2,histoname.c_str()));
-                TH2D* histo=dynamic_cast<TH2D*>(f2DHisto[i]->Clone());
                 
-                
-                if(histo)
+                if(fCurrentHisto)
                 {
-                    double zmax=fParConfig.GetValue<double>("Zmax");
-                    histo->SetMaximum(zmax);
-                    histo->SetStats(kFALSE);
-                    histo->Draw("zcol");
+                    delete fCurrentHisto;
+                    fCurrentHisto=NULL;
+                }
+                fCurrentHisto=dynamic_cast<TH2D*>(f2DHisto[i]->Clone());
+                
+                if(fVslider1)
+                {
+                    
+                    InitSlider();
+                    DoSlider();
+                }
+                
+                if(fCurrentHisto)
+                {
+                    //double zmax=fParConfig.GetValue<double>("Zmax");
+                    //fCurrentHisto->SetMaximum(zmax);
+                    fCurrentHisto->SetStats(kFALSE);
+                    fCurrentHisto->Draw("zcol");
                 }
                 
                 fCanvas2->Update();

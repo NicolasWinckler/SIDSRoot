@@ -29,5 +29,6 @@ detectorSuffix="_mtpsd6"
 kickerPrefix="Oscil"
 binZoomTH2Window="170"
 zmax="3.5e-8"
+ZSliderScale="5.e-9"
 
-@SIDS_BINARY_DIR@/bin/EsrMQSampler$dataFormat $ID $inputFile $userName $treeName $branch $outputFile $eventRate $numIoThreads $outputSocketType $outputBufSize $outputMethod $outputAddress $binDistancePDfreq $binPWindow $binDWindow $binningTraces $binningFreqTH2 $binSigmaPeak $thresholdPeak $detectorID $detectorSuffix $kickerPrefix $binZoomTH2Window $zmax 
+@SIDS_BINARY_DIR@/bin/EsrMQSampler$dataFormat $ID $inputFile $userName $treeName $branch $outputFile $eventRate $numIoThreads $outputSocketType $outputBufSize $outputMethod $outputAddress $binDistancePDfreq $binPWindow $binDWindow $binningTraces $binningFreqTH2 $binSigmaPeak $thresholdPeak $detectorID $detectorSuffix $kickerPrefix $binZoomTH2Window $zmax $ZSliderScale 

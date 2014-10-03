@@ -44,6 +44,8 @@
 #include "TVirtualPadEditor.h"
 #include <TGClient.h>
 #include <TFrame.h>
+#include "TGTripleSlider.h"
+
 
 //std
 #include <stdlib.h>
@@ -115,6 +117,9 @@ public:
     void DoDoubleClick(Int_t event, Int_t px, Int_t py, TObject *);
     void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
     void ChangeMode(Int_t BoxID);
+    void DoSlider();
+    void InitSlider();
+    
 protected:
     TRootEmbeddedCanvas  *fEc;                  // embedded canvas (left))
     TRootEmbeddedCanvas  *fEc2;                 // embedded canvas (right)
@@ -136,6 +141,8 @@ protected:
     TH1D                 *fDaughterTrace;       // daughter proj
     TH1I                 *fNEC;                 // number of EC History.
     TH1F                 *fPfreq;               // Parent freq History.
+    TH2D                 *fCurrentHisto;
+    TGDoubleVSlider      *fVslider1;
     TGVerticalFrame      *fControlFrame;        // main button frame
     TString              fFileName;             // file name
     TGFileInfo           fFileInfo;             // file info
@@ -144,6 +151,7 @@ protected:
     float                fParentFreq;           // Current Parent freq.;
     MQconfig             fParConfig;            // Parameter container
     TFile                *fInputFile;           // Input root file
+    double               fSliderScale;
     
     std::vector<SidsDecayTxtField*> fDecayField;// Decay field buttons
     std::vector<TH1D*> f1DHisto;                // Input 1D-Histos
