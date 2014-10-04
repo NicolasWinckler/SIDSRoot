@@ -61,7 +61,7 @@
 #include <boost/filesystem.hpp>
 #include <memory>
 #include <map>
-#include "SidsFileManager.h"
+#include "SIDSFileManager.h"
 #endif //__CINT__
 
 
