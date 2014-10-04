@@ -50,7 +50,7 @@ MQconfig::MQconfig()
     fKeyIntValues.push_back("BinZoomTH2Window");
     fKeyIntValues.push_back("BinningTraces");
     fKeyIntValues.push_back("BinningFreqTH2");
-    
+    fKeyIntValues.push_back("InputDirectory");
     
     /////////////////////////////////////////////////////////////////////
     /// Define double keys

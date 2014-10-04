@@ -48,16 +48,10 @@ int main(int argc, char** argv)
     ++i;
     
     MQconfig ConfigParameter;
-
-    
+    ConfigParameter.SetValue("InputDirectory",dirname);
     ConfigParameter.SetValue("InputFile",Resultsfilename);
-    ++i;
-    
     ConfigParameter.SetValue("TreeName",treename);
-    ++i;
-    
     ConfigParameter.SetValue("Branch",branchname);
-    ++i;
     
     string detID("RSA51");
     ConfigParameter.SetValue("DetectorID",detID);

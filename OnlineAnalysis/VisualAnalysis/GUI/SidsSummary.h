@@ -56,11 +56,12 @@
 #include <csignal>
 //#include <libgen.h>
 #include <cmath>
-
 // boost and fairroot
 #ifndef __CINT__
 #include <boost/filesystem.hpp>
 #include <memory>
+#include <map>
+#include "SidsFileManager.h"
 #endif //__CINT__
 
 

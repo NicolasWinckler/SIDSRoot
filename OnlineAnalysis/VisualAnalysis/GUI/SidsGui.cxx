@@ -361,8 +361,9 @@ void SidsGui::SetupGUI()
     AddFrame(fStatusBar, new TGLayoutHints(kLHintsExpandX, 0, 0, 10, 0));
     
    //////////////////////////////////////////////////////
-   
-   SetWindowName("Single Ion Decay Spectroscopy Analysis");
+    string title("Single Ion Decay Spectroscopy Analysis - File : ");
+    title+=fFileName.Data();
+   SetWindowName(title.c_str());
    MapSubwindows();
    Resize(GetDefaultSize());
    Connect("CloseWindow()", "SidsGui", this, "DoCloseWindow()");

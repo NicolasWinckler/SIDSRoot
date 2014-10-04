@@ -375,41 +375,85 @@ void SidsSummary::InitParameters()
     string inputfilename=fParConfig.GetValue<string>("InputFile");
     string treename=fParConfig.GetValue<string>("TreeName");
     string branchname=fParConfig.GetValue<string>("Branch");
-
+    string dirname=fParConfig.GetValue<string>("InputDirectory");
     
     EsrTree *DecayTree = new EsrTree(inputfilename,treename,branchname);
     fDataList=DecayTree->GetEsrData();
     delete DecayTree;
     
+    vector<string> analyzedFiles;
+    for(unsigned int k(0); k<fDataList.size(); k++)
+    {
+        string temp=fDataList[k].GetFileName();
+        analyzedFiles.push_back(temp);
+    }
+    
+    SIDSFileManager Fileman(dirname,analyzedFiles);
+    map<string,int> duplicates=Fileman.GetDuplicatesList();
+    map<string,vector<int> > duplicatesIdx;
+    
+    for(unsigned int k(0);k<fDataList.size() ;k++)
+    {
+        string temp=fDataList[k].GetFileName();
+        if(duplicates.count(temp))
+        {
+            duplicatesIdx[temp].push_back(k);
+        }
+    }
+    
+    int sumduplicate=0;
+    for(auto p : duplicates)
+    {
+        sumduplicate+=p.second;
+    }
+    ///*
+    
+    for(auto p : duplicatesIdx)
+    {
+        
+        //for(auto q : p.second)
+        //    MQLOG(INFO)<<"Index = "<<q<<"  for file "<<p.first;
+    }
+    //*/
     int binNumbECHist=2000;
     double tmin=0.;
     double tmax=70.;
     
-    int binNumber=(int)fDataList.size();
+    int binNumber=(int)fDataList.size()-sumduplicate+(int)duplicates.size();
     if(binNumber<=3)
         binNumber=3;
     fECFreq = new TH1D("Freq-dist","f_{EC}-f_{D} distribution",4000,-4000.,4000.);
     fNEC = new TH1I("NEC","Number of EC vs injection number",binNumber,1.,(Double_t)binNumber);
     fPfreq = new TH1F("ParentFreq","Frequency of parent ions vs injection number",binNumber,1.,(Double_t)binNumber);
     fECDecayTimes = new TH1D("EC-Decay","EC-Decay times",binNumbECHist,tmin,tmax);
+    
+    int ii=0;// different iterator to prevent on the holes caused by setbincontent(i)
     for(unsigned int i(0); i<fDataList.size(); i++)
     {
+        string filename=fDataList[i].GetFileName();
         int NumbEC=fDataList[i].GetNEC();
         float freq=fDataList[i].GetCoolParentFreq();
-        fNEC->SetBinContent(i+1,NumbEC);
-        fPfreq->SetBinContent(i+1,freq);
-        vector<EsrDecayEvent> ECDecayEvents=fDataList[i].GetECData();
         
-        double f_Dcool=(double)freq+1584.;
-        
-        for(unsigned int j(0);j<ECDecayEvents.size();j++)
+        if(!duplicates.count(filename) || (duplicates.count(filename) && i==duplicatesIdx[filename].back()) )
         {
-            double t_ec=(double)ECDecayEvents[j].GetDecayTime();
-            double f_ec=(double)ECDecayEvents[j].GetDecayFreq()-f_Dcool;
-            fECDecayTimes->Fill(t_ec);
-            fECFreq->Fill(f_ec);
+            fNEC->SetBinContent(ii+1,NumbEC);
+            fPfreq->SetBinContent(ii+1,freq);
+            vector<EsrDecayEvent> ECDecayEvents=fDataList[i].GetECData();
+
+            double f_Dcool=(double)freq+1584.;
+
+            for(unsigned int j(0);j<ECDecayEvents.size();j++)
+            {
+                double t_ec=(double)ECDecayEvents[j].GetDecayTime();
+                double f_ec=(double)ECDecayEvents[j].GetDecayFreq()-f_Dcool;
+                fECDecayTimes->Fill(t_ec);
+                fECFreq->Fill(f_ec);
+            }
+            ii++;
         }
+       
     }
+    
     
 }
 

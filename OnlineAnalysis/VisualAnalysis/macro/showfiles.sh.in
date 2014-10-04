@@ -3,6 +3,7 @@ cd $ESRDATAPATHIN
 
 command1=$1
 command2=$2
+command3=$3
 
 treeName="SIDSdecayData"
 branch="EsrInjData."
@@ -11,4 +12,4 @@ Resultsfile="$ESRDATAPATHOUT/SidsVisualDecayResults.root"
 #Directory="@SIDS_BINARY_DIR@"
 Directory=$ESRDATAPATHIN
 
-@SIDS_BINARY_DIR@/bin/ShowFile $treeName $branch $Directory $Resultsfile $command1 $command2
+@SIDS_BINARY_DIR@/bin/ShowFile $treeName $branch $Directory $Resultsfile $command1 $command2 $command3

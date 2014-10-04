@@ -29,6 +29,8 @@ public:
     }
 };
 
+
+
 class SIDSFileManager
 {
 public:
@@ -37,6 +39,7 @@ public:
         kPrintAll,
         kPrintAnalyzed,
         kPrintNotAnalyzed,
+        kDuplicates,
         kDetail
     };
     
@@ -47,6 +50,12 @@ public:
     void PrintAll(bool detail=false);
     void PrintAnalyzed(bool detail=false);
     void PrintNotAnalyzed(bool detail=false);
+    void PrintDuplicates(bool detail=false, int anaNr=1);
+    
+    map<string,int> GetDuplicatesList()
+    {
+        return fDuplicatesList;
+    }
     
 protected:
     string fDirName;
@@ -54,6 +63,7 @@ protected:
     vector<string> fInputList;
     map<string,int> fAnalyzedFiles;
     vector<string> fNonAnalyzedFiles;
+    map<string,int> fDuplicatesList;
     
     void SetInputList(const vector<string> &fileList );
     int SetDirectory(const string &dir);

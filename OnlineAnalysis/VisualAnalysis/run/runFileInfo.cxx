@@ -26,13 +26,13 @@
 
 using namespace std;
 
-
+bool is_number(const std::string& s);
 
 int main(int argc, char** argv) 
 {
 
     int MinArg=6;
-    int MaxArg=7;
+    int MaxArg=8;
     if (argc < MinArg || argc>MaxArg)
     {
         MQLOG(ERROR)<< "Number of argument incorrect. ("<<argc<<" instead of 6)";
@@ -54,10 +54,16 @@ int main(int argc, char** argv)
     
     
     string Command2;
+    string Command3;
     if(argc>MinArg)
     {
         ++i;
         Command2=string(argv[i]);
+        if(argc==MaxArg)
+        {
+            ++i;
+            Command3=string(argv[i]);
+        }
     }
         
     
@@ -82,8 +88,29 @@ int main(int argc, char** argv)
     if(Command1=="notanalyzed" || Command1=="--notanalyzed" || Command1=="left")
         command=SIDSFileManager::kPrintNotAnalyzed;
     
-    
-        
+    int AnalysisNumber=0;
+    bool DuplDetail=false;
+    if(Command1=="duplicates" || Command1=="--duplicates" || Command1=="doublet")
+    {
+        command=SIDSFileManager::kDuplicates;
+        if(Command2=="detail")
+        {
+            DuplDetail=true;
+            if(!Command3.empty())
+                if(is_number(Command3))
+                {
+                    AnalysisNumber=std::stoi(Command3);
+                }
+        }
+        else
+        {
+            if(is_number(Command2))
+            {
+                AnalysisNumber=std::stoi(Command2);
+            }
+
+        }
+    }
     
     SIDSFileManager fileListManager(dirname,analyzedFiles);
     
@@ -112,6 +139,12 @@ int main(int argc, char** argv)
             break;
         }
         
+        case SIDSFileManager::kDuplicates :
+        {
+            fileListManager.PrintDuplicates(DuplDetail,AnalysisNumber);
+            break;
+        }
+        
         default:
                 MQLOG(ERROR) << "Command showfiles.sh "<< Command1 <<" not supported";
                 MQLOG(INFO) << "Usage :";
@@ -121,6 +154,7 @@ int main(int argc, char** argv)
                 MQLOG(INFO) <<"\t showfiles.sh done";
                 MQLOG(INFO) <<"\t showfiles.sh notanalyzed";
                 MQLOG(INFO) <<"\t showfiles.sh left";
+                MQLOG(INFO) <<"\t showfiles.sh duplicates detail 2";
                 
     }
     
@@ -128,5 +162,11 @@ int main(int argc, char** argv)
     
     
     return 0;
+}
+
+bool is_number(const std::string& s)
+{
+    return !s.empty() && std::find_if(s.begin(), 
+        s.end(), [](char c) { return !std::isdigit(c); }) == s.end();
 }
 
