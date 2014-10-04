@@ -101,9 +101,6 @@ public:
     void DoDraw();
     void DoCloseWindow();
     void DoExit();
-    void DoValidate();
-    void AddDecay();
-    void RemoveDecay();
     void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
     void ChangeMode(Int_t BoxID);
     
