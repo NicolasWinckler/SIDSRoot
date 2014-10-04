@@ -18,6 +18,7 @@
 #pragma link C++ class SidsDecayTxtField+;
 #pragma link C++ class SidsQualityTagField+;
 #pragma link C++ class SidsGui+;
+#pragma link C++ class SidsSummary+;
 #pragma link C++ class EsrTree+;
 #pragma link C++ class Header;
 

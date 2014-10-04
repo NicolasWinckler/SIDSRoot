@@ -32,7 +32,7 @@ If (Boost_FOUND)
   configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/startPushPull_esr.sh.in ${SIDS_BINARY_DIR}/bin/startEsrPushPull.sh )
   configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/startVisualAnalysis.sh.in ${SIDS_BINARY_DIR}/bin/startVisualAnalysis.sh )
   configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/showfiles.sh.in ${SIDS_BINARY_DIR}/bin/showfiles.sh )
-
+  configure_file( ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/macro/showSummary.sh.in ${SIDS_BINARY_DIR}/bin/showSummary.sh )
 EndIf (Boost_FOUND)
 
 set(LINK_DIRECTORIES
@@ -50,6 +50,7 @@ Set(SRCS
     data/EsrInjData.cxx
     data/EsrTree.cxx
     GUI/SidsGui.cxx
+    GUI/SidsSummary.cxx
     GUI/SidsDecayTxtField.cxx
     GUI/SidsQualityTagField.cxx
     ${SIDS_SOURCE_DIR}/time2root/header.cxx
@@ -82,6 +83,7 @@ If (Boost_FOUND)
     EsrMQSamplerBoost
     EsrMQFileSinkBoost
     ShowFile
+    ShowStatus
   )
 
   set(Exe_Source
@@ -89,6 +91,7 @@ If (Boost_FOUND)
     run/runEsrSampler.cxx
     run/runEsrFileSink.cxx
     run/runFileInfo.cxx
+    run/runSummary.cxx
     )
 
 
