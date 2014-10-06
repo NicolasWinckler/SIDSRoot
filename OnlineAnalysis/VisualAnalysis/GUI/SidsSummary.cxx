@@ -59,9 +59,18 @@ SidsSummary::SidsSummary(const TGWindow *p, int w, int h,MQconfig SamplerConfig,
         fNEC(NULL), fPfreq(NULL), fECFreq(NULL), fVslider1(NULL), fControlFrame(NULL),
         fFileName(Filename.c_str()), fFileInfo(), 
         fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.),
-        fParConfig(SamplerConfig), fInputFile(NULL), fSliderScale(1.),
+        fParConfig(SamplerConfig), fInputFile(NULL), fBinning(100),
         fDecayCounter(0), fHisto1DCounter(0), fHisto2DCounter(0), fHeaderCounter(0),
-        fReadyToSend(false), fSampler(false)
+        fReadyToSend(false), fSampler(false),
+        fx_min(0.), fx_max(0.),
+        flambdaInit(0.), flambda_Max(0.), flambda_Min(0.),
+        fampInit(0.), famp_Max(0.), famp_Min(0.),
+        fOmegaInit(0.), fOmega_Max(0.), fOmega_Min(0.),
+        fPhiInit(0.), fPhi_Max(0.), fPhi_Min(0.),
+        fx(NULL), flambda0(NULL),
+        flambda1(NULL), famp1(NULL), fomega1(NULL), fphi1(NULL),
+        fpdfH0(NULL), fpdfH1(NULL), fECdata(NULL), 
+        fFitResultH0(NULL), fFitResultH1(NULL)
 
 {
    // Constructor.
@@ -269,37 +278,35 @@ void SidsSummary::SetupGUI()
    
    //*
    TGComboBox *combo = new TGComboBox(hfrmDrawNBox);
-   combo->AddEntry("RSA30", SIDS::kRSA30);
-   combo->AddEntry("RSA51", SIDS::kRSA51);
-   combo->AddEntry("RSA52", SIDS::kRSA52);
-   combo->Connect("Selected(Int_t)", "SidsSummary", this, "ChangeMode(Int_t)");
+   combo->AddEntry("Unbinned Likelihood", kUnbinnedLikelihood);
+   combo->AddEntry("Binned Likelihood", kBinnedLikelihood);
+   combo->AddEntry("Chi2", kChi2);
+   //combo->Connect("Selected(Int_t)", "SidsSummary", this, "ChangeMode(Int_t)");
+   combo->Connect("Selected(Int_t)", "SidsSummary", this, "DoDraw(Int_t)");
    //combo->Select(SIDS::kRSA51);
    hfrmDrawNBox->AddFrame(combo, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
-    combo->Resize(100, 20);
+   combo->Resize(100, 20);
    // */
    fControlFrame->AddFrame(hfrmDrawNBox, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
    
    
    
-  
    hfrm->AddFrame(fControlFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandY));
    AddFrame(hfrm, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
    
    
    
-
    ////////////////////////////////////////////////////// 2nd layer
    //TGHorizontalFrame *hf3 = new TGHorizontalFrame(this, 10, 10);
    TGHorizontalFrame *hf3 = new TGHorizontalFrame(this, 10, 10);
    //hf3 = new TGVerticalFrame(this, 0, 0, 0);
 
-   combo->Select(SIDS::kRSA51);
-
+   combo->Select(kUnbinnedLikelihood);
+   
    
    TGVerticalFrame *ExitAndValidFrame = new TGVerticalFrame(hf3, 10, 10);
    
    
-
    fButtonExit = new TGTextButton(ExitAndValidFrame, "        &Exit...        ");
    fButtonExit->Resize(fButtonExit->GetDefaultSize());
    fButtonExit->SetToolTipText("Exit Application (ROOT)");
@@ -334,27 +341,24 @@ void SidsSummary::ChangeMode(Int_t BoxID)
     
     switch(BoxID)
     {
-        case SIDS::kRSA30 :
+        case kUnbinnedLikelihood :
         {
-            string DetId="RSA30";
-            fParConfig.SetValue("DetectorID",DetId);
-            DoDraw();
+            
+            DoDraw(BoxID);
             break;
         }
         
-        case SIDS::kRSA51 :
+        case kBinnedLikelihood :
         {
-            string DetId="RSA51";
-            fParConfig.SetValue("DetectorID",DetId);
-            DoDraw();
+            
+            DoDraw(BoxID);
             break;
         }
         
-        case SIDS::kRSA52 :
+        case kChi2 :
         {
-            string DetId="RSA52";
-            fParConfig.SetValue("DetectorID",DetId);
-            DoDraw();
+            
+            DoDraw(BoxID);
             break;
         }
     
@@ -376,6 +380,26 @@ void SidsSummary::InitParameters()
     string treename=fParConfig.GetValue<string>("TreeName");
     string branchname=fParConfig.GetValue<string>("Branch");
     string dirname=fParConfig.GetValue<string>("InputDirectory");
+    fBinning=fParConfig.GetValue<int>("Binning");
+    
+    fx_min=fParConfig.GetValue<double>("x_min");
+    fx_max=fParConfig.GetValue<double>("x_max");
+    
+    flambdaInit=fParConfig.GetValue<double>("LambdaInit");
+    flambda_Max=fParConfig.GetValue<double>("Lambda_Max");
+    flambda_Min=fParConfig.GetValue<double>("Lambda_Min");
+    
+    fampInit=fParConfig.GetValue<double>("AmpInit");
+    famp_Max=fParConfig.GetValue<double>("Amp_Max");
+    famp_Min=fParConfig.GetValue<double>("Amp_Min");
+    
+    fOmegaInit=fParConfig.GetValue<double>("OmegaInit");
+    fOmega_Max=fParConfig.GetValue<double>("Omega_Max");
+    fOmega_Min=fParConfig.GetValue<double>("Omega_Min");
+    
+    fPhiInit=fParConfig.GetValue<double>("PhiInit");
+    fPhi_Max=fParConfig.GetValue<double>("Phi_Max");
+    fPhi_Min=fParConfig.GetValue<double>("Phi_Min");
     
     EsrTree *DecayTree = new EsrTree(inputfilename,treename,branchname);
     fDataList=DecayTree->GetEsrData();
@@ -390,31 +414,41 @@ void SidsSummary::InitParameters()
     
     SIDSFileManager Fileman(dirname,analyzedFiles);
     map<string,int> duplicates=Fileman.GetDuplicatesList();
-    map<string,vector<int> > duplicatesIdx;
     
+    
+    // search for index of duplicates and fill non duplicates first
     for(unsigned int k(0);k<fDataList.size() ;k++)
     {
         string temp=fDataList[k].GetFileName();
         if(duplicates.count(temp))
         {
-            duplicatesIdx[temp].push_back(k);
+            fDuplicatesIdx[temp].push_back(k);
+        }
+        else
+        {
+            fDataToPlotIdx[temp]=k;
         }
     }
     
-    int sumduplicate=0;
-    for(auto p : duplicates)
-    {
-        sumduplicate+=p.second;
-    }
-    ///*
     
-    for(auto p : duplicatesIdx)
+    // count number of duplicates and add to main list the wanted index (here last added duplicates)
+    int sumduplicate=0;
+    for(auto p : fDuplicatesIdx)
+    {
+        sumduplicate+=p.second.size();
+        fDataToPlotIdx[p.first]=p.second.back();
+    }
+    
+    /*
+    for(auto p : fDuplicatesIdx)
     {
         
         //for(auto q : p.second)
         //    MQLOG(INFO)<<"Index = "<<q<<"  for file "<<p.first;
     }
     //*/
+    
+    
     int binNumbECHist=2000;
     double tmin=0.;
     double tmax=70.;
@@ -427,34 +461,83 @@ void SidsSummary::InitParameters()
     fPfreq = new TH1F("ParentFreq","Frequency of parent ions vs injection number",binNumber,1.,(Double_t)binNumber);
     fECDecayTimes = new TH1D("EC-Decay","EC-Decay times",binNumbECHist,tmin,tmax);
     
-    int ii=0;// different iterator to prevent on the holes caused by setbincontent(i)
-    for(unsigned int i(0); i<fDataList.size(); i++)
+    
+    
+    
+    
+    fx = new RooRealVar("x","x",tmin,tmax);
+    flambda0 = new RooRealVar("#lambda_{0}","#lambda_{0}",flambdaInit,flambda_Min,flambda_Max);
+
+    //Define alt parameters
+    flambda1 = new RooRealVar("#lambda_{1}","#lambda_{1}",flambdaInit,flambda_Min,flambda_Max);
+    famp1 = new RooRealVar("a_{1}","a_{1}",fampInit,famp_Min,famp_Max);
+    fomega1 = new RooRealVar("#omega_{1}","#omega_{1}",fOmegaInit,fOmega_Min,fOmega_Max);
+    fphi1 = new RooRealVar("#phi_{1}","#phi_{1}",fPhiInit,fPhi_Min,fPhi_Max);
+    
+    cout<<"OK0"<<endl;
+    fpdfH0 = new RooGenericPdf("H0","#lambda_{0}*exp(-#lambda_{0}*x)",RooArgSet(*fx,*flambda0));
+    fpdfH1 = new SidsRooOscModel("H1","H1",*fx,*flambda1,*famp1,*fomega1,*fphi1);
+    
+    fECdata= new RooDataSet("DataSet","DataSet",*fx);
+    
+    
+    
+    int histIdx=0;
+    for(auto p : fDataToPlotIdx)// loop chronological (files sorted)  including last duplicates only
     {
-        string filename=fDataList[i].GetFileName();
-        int NumbEC=fDataList[i].GetNEC();
-        float freq=fDataList[i].GetCoolParentFreq();
+        int TreeIndex=p.second;
+        int NumbEC=fDataList[TreeIndex].GetNEC();
+        float freq=fDataList[TreeIndex].GetCoolParentFreq();
+        double f_Dcool=(double)freq+1584.;
+        vector<EsrDecayEvent> ECDecayEvents=fDataList[TreeIndex].GetECData();
         
-        if(!duplicates.count(filename) || (duplicates.count(filename) && i==duplicatesIdx[filename].back()) )
+        // set hist content for each file
+        fNEC->SetBinContent(histIdx+1,NumbEC);
+        fPfreq->SetBinContent(histIdx+1,freq);
+        
+        for(unsigned int j(0);j<ECDecayEvents.size();j++)
         {
-            fNEC->SetBinContent(ii+1,NumbEC);
-            fPfreq->SetBinContent(ii+1,freq);
-            vector<EsrDecayEvent> ECDecayEvents=fDataList[i].GetECData();
+            double t_ec=(double)ECDecayEvents[j].GetDecayTime();
+            double f_ec=(double)ECDecayEvents[j].GetDecayFreq()-f_Dcool;
+            fECDecayTimes->Fill(t_ec);
+            fECFreq->Fill(f_ec);
+            *fx=t_ec;
+            
+            //if(t_ec>fx_min && t_ec<fx_max)
+            fECdata->add(*fx);
+        }
+        histIdx++;
+    }
+    
+}
 
-            double f_Dcool=(double)freq+1584.;
-
-            for(unsigned int j(0);j<ECDecayEvents.size();j++)
+void SidsSummary::UpdateHistData(double tmin, double tmax)
+{
+    fECDecayTimes->Reset();
+    fECFreq->Reset();
+    
+    //int histIdx=0;
+    for(auto p : fDataToPlotIdx)// loop chronological (files sorted)  including last duplicates only
+    {
+        int TreeIndex=p.second;
+        float freq=fDataList[TreeIndex].GetCoolParentFreq();
+        double f_Dcool=(double)freq+1584.;
+        vector<EsrDecayEvent> ECDecayEvents=fDataList[TreeIndex].GetECData();
+        
+        
+        for(unsigned int j(0);j<ECDecayEvents.size();j++)
+        {
+            double t_ec=(double)ECDecayEvents[j].GetDecayTime();
+            double f_ec=(double)ECDecayEvents[j].GetDecayFreq()-f_Dcool;
+            
+            if(t_ec>tmin && t_ec<tmax)
             {
-                double t_ec=(double)ECDecayEvents[j].GetDecayTime();
-                double f_ec=(double)ECDecayEvents[j].GetDecayFreq()-f_Dcool;
                 fECDecayTimes->Fill(t_ec);
                 fECFreq->Fill(f_ec);
             }
-            ii++;
         }
-       
+        //histIdx++;
     }
-    
-    
 }
 
 /// ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -882,11 +965,35 @@ void SidsSummary::DataDropped(TGListTreeItem *, TDNDData *data)
 
 
 //______________________________________________________________________________
-void SidsSummary::DoDraw() 
+void SidsSummary::DoDraw(Int_t BoxID) 
 {
     fCanvas2->SetCrosshair();
     fCanvas2->cd();
-    fECDecayTimes->Draw();
+    
+    switch(BoxID)
+    {
+        case kUnbinnedLikelihood :
+        {
+            UnbinnedLikelihoodFit(true);
+            break;
+        }
+        
+        case kBinnedLikelihood :
+        {
+            MQLOG(ERROR)<<"Function not implemented yet";
+            break;
+        }
+        
+        case kChi2 :
+        {
+            MQLOG(ERROR)<<"Function not implemented yet";
+            break;
+        }
+    
+    
+    }
+    
+    //fECDecayTimes->Draw();
     fCanvas2->Update();
     
     
@@ -939,6 +1046,159 @@ void SidsSummary::DoExit()
     TVirtualPadEditor::Terminate();
     gApplication->Terminate(0);
 }
+
+
+
+void SidsSummary::ReInitRooFitPar()
+{
+    if(fx_max<fx_min)
+    {
+        double temp=fx_min;
+        fx_min=fx_max;
+        fx_max=temp;
+    }
+
+    /// OBSERVABLE
+    if(fx)
+        fx->setRange(fx_min,fx_max);
+    
+    
+    // M0 & M1 PARAMETERS
+    if(flambda0)
+    {
+        flambda0->setVal(flambdaInit);
+        flambda0->setRange(flambda_Min,flambda_Max);
+    }
+    
+    if(flambda1)
+    {
+        flambda1->setVal(flambdaInit);
+        flambda1->setRange(flambda_Min,flambda_Max);
+    }
+    
+    if(famp1)
+    {
+        famp1->setVal(fampInit);
+        famp1->setRange(famp_Min,famp_Max);
+    }
+    
+    
+    if(fomega1)
+    {
+        fomega1->setVal(fOmegaInit);
+        fomega1->setRange(fOmega_Min,fOmega_Max);
+    }
+    
+    
+    if(fphi1)
+    {
+        fphi1->setVal(fPhiInit);
+        fphi1->setRange(fPhi_Min,fPhi_Max);
+    }
+    
+    /// PDF
+    if(fpdfH0)
+    {
+        delete fpdfH0;
+        fpdfH0=NULL;
+        fpdfH0 = new RooGenericPdf("H0","#lambda_{0}*exp(-#lambda_{0}*x)",RooArgSet(*fx,*flambda0));
+    }
+    else
+        fpdfH0 = new RooGenericPdf("H0","#lambda_{0}*exp(-#lambda_{0}*x)",RooArgSet(*fx,*flambda0));
+
+    if(fpdfH1)
+    {
+        delete fpdfH1;
+        fpdfH1=NULL;
+        fpdfH1 = new SidsRooOscModel("H1","H1",*fx,*flambda1,*famp1,*fomega1,*fphi1);
+    }
+    else{
+        fpdfH1 = new SidsRooOscModel("H1","H1",*fx,*flambda1,*famp1,*fomega1,*fphi1);}
+}
+
+void SidsSummary::UnbinnedLikelihoodFit(bool Draw)
+{
+    
+    /// //               error band option description
+    /// //        RooFit::VisualizeError(*r,1),FillColor(kOrange)
+    // Visualize 1-sigma error encoded in fit result 'r' as orange band using linear error propagation
+    // This results in an error band that is by construction symmetric
+    //
+    // The linear error is calculated as
+    // error(x) = Z* F_a(x) * Corr(a,a') F_a'(x)
+    //
+    // where     F_a(x) = [ f(x,a+da) - f(x,a-da) ] / 2, 
+    // 
+    //         with f(x) = the plotted curve 
+    //              'da' = error taken from the fit result
+    //        Corr(a,a') = the correlation matrix from the fit result
+    //                Z = requested significance 'Z sigma band'
+    //
+    // The linear method is fast (required 2*N evaluations of the curve, where N is the number of parameters), 
+    // but may not be accurate in the presence of strong correlations (~>0.9) and at Z>2 due to linear and 
+    // Gaussian approximations made
+
+
+    /// //        RooFit::VisualizeError(*r,1,kFALSE),DrawOption("L"),LineWidth(2),LineColor(kRed)
+    // Calculate error using sampling method and visualize as dashed red line. 
+    //
+    // In this method a number of curves is calculated with variations of the parameter values, as sampled 
+    // from a multi-variate Gaussian p.d.f. that is constructed from the fit results covariance matrix. 
+    // The error(x) is determined by calculating a central interval that capture N% of the variations 
+    // for each valye of x, where N% is controlled by Z (i.e. Z=1 gives N=68%). The number of sampling curves 
+    // is chosen to be such that at least 100 curves are expected to be outside the N% interval, and is minimally 
+    // 100 (e.g. Z=1->Ncurve=356, Z=2->Ncurve=2156)) Intervals from the sampling method can be asymmetric, 
+    // and may perform better in the presence of strong correlations, but may take (much) longer to calculate
+
+    
+    
+    string strXmin;
+    ostringstream ossTemp1;
+    ossTemp1 << fx_min;
+    strXmin = ossTemp1.str();
+
+    string strXmax;
+    ostringstream ossTemp2;
+    ossTemp2 << fx_max;
+    strXmax = ossTemp2.str();
+    
+    string CutRange="x>"+strXmin;
+    CutRange+=" && x<";
+    CutRange+=strXmax;
+    ReInitRooFitPar();
+    
+    
+    RooDataSet* ReducedDataSet = (RooDataSet*) fECdata->reduce(*fx,CutRange.c_str()) ; 
+    
+    if(Draw)
+    {
+        fFitResultH0=fpdfH0->fitTo(*ReducedDataSet,RooFit::Save());
+        fFitResultH1=fpdfH1->fitTo(*ReducedDataSet,RooFit::Save());
+
+        RooPlot* xframe0 = fx->frame(RooFit::Title("Binned data and fit functions with their 1-sigma error bands"));
+        ReducedDataSet->plotOn(xframe0,RooFit::Binning(fBinning));
+        fpdfH0->plotOn(xframe0,RooFit::LineColor(kRed));
+        fpdfH1->plotOn(xframe0,RooFit::LineColor(kBlue));
+
+        RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+        fpdfH0->plotOn(xframe0,RooFit::VisualizeError(*fFitResultH0,1),RooFit::FillColor(kOrange));
+        fpdfH1->plotOn(xframe0,RooFit::VisualizeError(*fFitResultH1,1),RooFit::FillColor(kOrange));
+        fpdfH0->plotOn(xframe0,RooFit::VisualizeError(*fFitResultH0,1,kFALSE),RooFit::DrawOption("L"),RooFit::LineWidth(1),RooFit::LineColor(kRed),RooFit::LineStyle(kDashed));
+        fpdfH1->plotOn(xframe0,RooFit::VisualizeError(*fFitResultH1,1,kFALSE),RooFit::DrawOption("L"),RooFit::LineWidth(1),RooFit::LineColor(kBlue),RooFit::LineStyle(kDashed));
+        RooMsgService::instance().setGlobalKillBelow(RooFit::INFO);
+        
+        xframe0->Draw();
+    }
+    
+       
+  }
+
+
+
+
+
+
+
 
 
 ClassImp(SidsSummary)

@@ -52,6 +52,9 @@ MQconfig::MQconfig()
     fKeyIntValues.push_back("BinningFreqTH2");
     fKeyIntValues.push_back("InputDirectory");
     
+    fKeyIntValues.push_back("Binning");
+    
+    
     /////////////////////////////////////////////////////////////////////
     /// Define double keys
     //exp related
@@ -59,6 +62,31 @@ MQconfig::MQconfig()
     fKeyDoubleValues.push_back("ThresholdPeak");
     fKeyDoubleValues.push_back("Zmax");
     fKeyDoubleValues.push_back("ZSliderScale");
+    
+    
+    // fit par
+    fKeyDoubleValues.push_back("x_min");
+    fKeyDoubleValues.push_back("x_max");
+    
+    fKeyDoubleValues.push_back("LambdaInit");
+    fKeyDoubleValues.push_back("Lambda_Max");
+    fKeyDoubleValues.push_back("Lambda_Min");
+    
+    fKeyDoubleValues.push_back("AmpInit");
+    fKeyDoubleValues.push_back("Amp_Max");
+    fKeyDoubleValues.push_back("Amp_Min");
+    
+    fKeyDoubleValues.push_back("OmegaInit");
+    fKeyDoubleValues.push_back("Omega_Max");
+    fKeyDoubleValues.push_back("Omega_Min");
+    
+    fKeyDoubleValues.push_back("PhiInit");
+    fKeyDoubleValues.push_back("Phi_Max");
+    fKeyDoubleValues.push_back("Phi_Min");
+    
+    
+    
+    
     /////////////////////////////////////////////////////////////////////
     /// create and init keys in maps
     

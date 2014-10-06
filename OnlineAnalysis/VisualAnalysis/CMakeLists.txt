@@ -22,6 +22,7 @@ ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/MQTask
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/MQDevice
 ${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/GUI
 ${SIDS_SOURCE_DIR}/time2root
+${SIDS_SOURCE_DIR}/OnlineAnalysis/VisualAnalysis/Models
 )
 
 include_directories(${INCLUDE_DIRECTORIES})
@@ -54,6 +55,7 @@ Set(SRCS
     GUI/SidsDecayTxtField.cxx
     GUI/SidsQualityTagField.cxx
     ${SIDS_SOURCE_DIR}/time2root/header.cxx
+    Models/SidsRooOscModel.cxx
 )
 
 If (Boost_FOUND)
@@ -63,6 +65,8 @@ If (Boost_FOUND)
     MQDevice/EsrSidsSampler.cxx
     MQDevice/EsrFileSink.cxx
     MQTask/EsrSamplerTask.cxx
+    #Models/RooMypdf.cpp
+    #Models/RooMypdfDict.cpp
   )
 EndIf (Boost_FOUND)
 
@@ -72,7 +76,10 @@ Set(LIBRARY_NAME SidsVisualAna)
 If (Boost_FOUND)
   Set(DEPENDENCIES
     Base ParBase FairTools MCStack FairMQ FairMQSampler boost_thread 
-boost_system boost_serialization boost_filesystem RIO Cint Core Gui Spectrum)
+    boost_system boost_serialization boost_filesystem 
+    Matrix Tree Hist RIO Cint Core
+    Minuit RooFitCore RooFit RooStats Foam MathMore
+    Gui Spectrum)
 EndIf (Boost_FOUND)
 
 GENERATE_LIBRARY()

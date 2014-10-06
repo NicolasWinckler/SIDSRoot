@@ -12,7 +12,7 @@
 
 #pragma link C++ class EsrSMSEvent+;
 #pragma link C++ class EsrBinDecayEvent+;
-
+#pragma link C++ class SidsRooOscModel+;
 #pragma link C++ class EsrDecayEvent+;
 #pragma link C++ class EsrInjData;
 #pragma link C++ class SidsDecayTxtField+;

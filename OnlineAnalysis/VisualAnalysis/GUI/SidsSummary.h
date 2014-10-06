@@ -46,6 +46,20 @@
 #include <TFrame.h>
 #include "TGTripleSlider.h"
 
+#include "TPaveText.h"
+#include "RooRealVar.h" 
+#include "RooDataSet.h"
+#include "RooPlot.h"
+#include "RooGenericPdf.h"
+#include "RooMinuit.h"
+#include "RooWorkspace.h"
+#include "RooRandom.h"
+#include "RooUniform.h"
+#include "RooGaussian.h"
+#include "RooStats/ModelConfig.h"
+#include "RooNumIntConfig.h"
+#include "RooRealProxy.h"
+#include "RooAbsPdf.h"
 
 //std
 #include <stdlib.h>
@@ -71,9 +85,21 @@
 
 #include "EsrInjData.h"
 
+#include "SidsRooOscModel.h"
+//#include "RooMypdf.h"
 #include "SidsQualityTagField.h"
 #include "SidsDecayTxtField.h"
 #include "header.h"
+//#include "RooMyPdfDict.h"
+
+
+using namespace RooFit;
+using namespace RooStats;
+
+class SidsRooOscModel;
+
+
+
 
 
 enum MessageTypes {
@@ -92,6 +118,13 @@ class SidsSummary : public TGMainFrame
 
 public:
     
+    enum FitType
+    {
+        kUnbinnedLikelihood,
+        kBinnedLikelihood,
+        kChi2
+    };
+    
     SidsSummary(const TGWindow *p, int w, int h, MQconfig SamplerConfig, std::string Filename="");
     virtual ~SidsSummary();
     
@@ -99,12 +132,13 @@ public:
     void HandleMenu(Int_t);
     void DataDropped(TGListTreeItem* item, TDNDData* data);
     void ResetStatus();
-    void DoDraw();
+    void DoDraw(Int_t BoxID);
     void DoCloseWindow();
     void DoExit();
     void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
     void ChangeMode(Int_t BoxID);
-    
+    void UnbinnedLikelihoodFit(bool Draw);
+    void UpdateHistData(double tmin=0., double tmax=70.);
     
 protected:
     TRootEmbeddedCanvas  *fEc;                  // embedded canvas (left))
@@ -135,12 +169,51 @@ protected:
     float                fParentFreq;           // Current Parent freq.;
     MQconfig             fParConfig;            // Parameter container
     TFile                *fInputFile;           // Input root file
-    double               fSliderScale;
+    int                  fBinning;
+    
+    
+    // fit par
+    double fx_min;
+    double fx_max;
+    
+    double flambdaInit;
+    double flambda_Max;
+    double flambda_Min;
+    
+    double fampInit;
+    double famp_Max;
+    double famp_Min;
+    
+    double fOmegaInit;
+    double fOmega_Max;
+    double fOmega_Min;
+    
+    double fPhiInit;
+    double fPhi_Max;
+    double fPhi_Min;
+    
+    RooRealVar* fx;
+    RooRealVar* flambda0;
+    RooRealVar* flambda1;
+    RooRealVar* famp1;
+    RooRealVar* fomega1;
+    RooRealVar* fphi1;
+    
+    RooGenericPdf* fpdfH0;
+    SidsRooOscModel* fpdfH1;
+    RooDataSet* fECdata;
+    
+    
+    RooFitResult* fFitResultH0;
+    RooFitResult* fFitResultH1;
     
     std::vector<TH1D*> f1DHisto;                // Input 1D-Histos
     std::vector<TH2D*> f2DHisto;                // Input 2D-Histos
     std::vector<Header*> fHeaders;              // Input Headers
     std::vector<EsrInjData> fDataList;
+    
+    map<string,vector<int> > fDuplicatesIdx;
+    map<string, int> fDataToPlotIdx;
     
     /// init constructor
     void SetupGUI();            // use once in constructor
@@ -154,7 +227,7 @@ protected:
     void AddToRootFile(TObject* obj, const string & outputFileName, const string &  fileOption="NEW");
     void SaveHisto(const string & outputFileName);
     void ReadDir(TDirectory *dir);
-    
+    void ReInitRooFitPar();
     
    
 private:

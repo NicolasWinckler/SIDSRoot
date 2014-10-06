@@ -72,6 +72,52 @@ int main(int argc, char** argv)
         
     }
     
+    
+    
+    
+    int Binning=100;
+    ConfigParameter.SetValue("Binning",Binning);
+    
+    double fx_min=6.0;
+    double fx_max=60.0;
+    ConfigParameter.SetValue("x_min",fx_min);
+    ConfigParameter.SetValue("x_max",fx_max);
+    
+    double flambdaInit=0.0120;
+    double flambda_Max=1.5*flambdaInit;
+    double flambda_Min=0.;
+    ConfigParameter.SetValue("LambdaInit",flambdaInit);
+    ConfigParameter.SetValue("Lambda_Max",flambda_Max);
+    ConfigParameter.SetValue("Lambda_Min",flambda_Min);
+    
+    
+    double fampInit=0.1;
+    double famp_Max=0.3;
+    double famp_Min=-0.3;
+    ConfigParameter.SetValue("AmpInit",fampInit);
+    ConfigParameter.SetValue("Amp_Max",famp_Max);
+    ConfigParameter.SetValue("Amp_Min",famp_Min);
+    
+    
+    double fOmegaInit=0.88;
+    double fOmega_Max=7.0;
+    double fOmega_Min=0.;
+    ConfigParameter.SetValue("OmegaInit",fOmegaInit);
+    ConfigParameter.SetValue("Omega_Max",fOmega_Max);
+    ConfigParameter.SetValue("Omega_Min",fOmega_Min);
+    
+    
+    double fPhiInit=0.;
+    double fPhi_Max=3.14;
+    double fPhi_Min=-3.14;
+    ConfigParameter.SetValue("PhiInit",fPhiInit);
+    ConfigParameter.SetValue("Phi_Max",fPhi_Max);
+    ConfigParameter.SetValue("Phi_Min",fPhi_Min);
+    
+    
+    
+    
+    
     bool startgui=true;
     
     if(startgui)
