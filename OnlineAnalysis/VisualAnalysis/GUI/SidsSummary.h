@@ -61,6 +61,7 @@
 #include "RooNumIntConfig.h"
 #include "RooRealProxy.h"
 #include "RooAbsPdf.h"
+#include "RooChi2Var.h"
 
 //std
 #include <stdlib.h>
@@ -212,6 +213,8 @@ protected:
     double fPhi_Min;
     
     RooRealVar* fx;
+    RooRealVar* fNorm0;
+    RooRealVar* fNorm1;
     RooRealVar* flambda0;
     RooRealVar* flambda1;
     RooRealVar* famp1;
@@ -220,6 +223,8 @@ protected:
     
     RooGenericPdf* fpdfH0;
     SidsRooOscModel* fpdfH1;
+    RooGenericPdf* fChi2pdfH0;
+    RooGenericPdf* fChi2pdfH1;
     RooDataSet* fECdata;
     
     

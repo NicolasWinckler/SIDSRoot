@@ -79,7 +79,7 @@ SidsSummary::SidsSummary(const TGWindow *p, int w, int h,MQconfig SamplerConfig,
         fPhiInit(0.), fPhi_Max(0.), fPhi_Min(0.),
         fx(NULL), flambda0(NULL),
         flambda1(NULL), famp1(NULL), fomega1(NULL), fphi1(NULL),
-        fpdfH0(NULL), fpdfH1(NULL), fECdata(NULL), 
+        fpdfH0(NULL), fpdfH1(NULL), fChi2pdfH0(NULL), fChi2pdfH1(NULL),fECdata(NULL), 
         fFitResultH0(NULL), fFitResultH1(NULL), fexp1(NULL), fosc1(NULL)
 
 {
@@ -504,9 +504,11 @@ void SidsSummary::InitParameters()
     
     fx = new RooRealVar("x","x",tmin,tmax);
     flambda0 = new RooRealVar("#lambda_{0}","#lambda_{0}",flambdaInit,flambda_Min,flambda_Max);
+    fNorm0 = new RooRealVar("N_{0}","N_{0}",fNormFactInit,fNormFact_Min,fNormFact_Max);
 
     //Define alt parameters
     flambda1 = new RooRealVar("#lambda_{1}","#lambda_{1}",flambdaInit,flambda_Min,flambda_Max);
+    fNorm1 = new RooRealVar("N_{1}","N_{1}",fNormFactInit,fNormFact_Min,fNormFact_Max);
     famp1 = new RooRealVar("a_{1}","a_{1}",fampInit,famp_Min,famp_Max);
     fomega1 = new RooRealVar("#omega_{1}","#omega_{1}",fOmegaInit,fOmega_Min,fOmega_Max);
     fphi1 = new RooRealVar("#phi_{1}","#phi_{1}",fPhiInit,fPhi_Min,fPhi_Max);
@@ -514,23 +516,16 @@ void SidsSummary::InitParameters()
     fpdfH0 = new RooGenericPdf("H0","#lambda_{0}*exp(-#lambda_{0}*x)",RooArgSet(*fx,*flambda0));
     fpdfH1 = new SidsRooOscModel("H1","H1",*fx,*flambda1,*famp1,*fomega1,*fphi1);
     
+    fChi2pdfH0 = new RooGenericPdf("Chi2H0","N_{0}*exp(-#lambda_{0}*x)",RooArgSet(*fx,*fNorm0,*flambda0));
+    //fChi2pdfH1 = new RooGenericPdf("Chi2H1","N_{1}*(1+a_{1}*cos(#omega_{1}*x+#phi{1}))exp(-#lambda_{1}*x)",RooArgSet(*fx,*fNorm1,*flambda1,*famp1,*fomega1,*fphi1));
+    fChi2pdfH1 = new RooGenericPdf("Chi2H1","N_{1}*#lambda_{1}*(#lambda_{1}*#lambda_{1}+#omega_{1}*#omega_{1})/(#lambda_{1}*#lambda_{1}*(1+a_{1})+#omega_{1}*#omega_{1})*(1+a_{1}*cos(#omega_{1}*x+#phi_{1}))*exp(-#lambda_{1}*x)"
+		,RooArgSet(*fx,*fNorm1,*flambda1,*famp1,*fomega1,*fphi1));
+    
     fECdata= new RooDataSet("DataSet","DataSet",*fx);
     
     
     
     
-    fexp1 = new TF1("fexp1",Chi2FitM0,fx_min,fx_max,2);	
-    fexp1->SetParameters(fNormFactInit,flambdaInit);
-    fexp1->SetParName(0,"N_0");
-    fexp1->SetParName(1,"#lambda");
-
-    fosc1 = new TF1("fosc1",Chi2FitM1,fx_min,fx_min,5);
-    fosc1->SetParameters(fNormFactInit,fampInit,fOmegaInit,fPhiInit,flambdaInit);	//p0=N,, p2=a, p3=w, p4=phi, p5=lambda_tot
-    fosc1->SetParName(0,"N_0");
-    fosc1->SetParName(1,"a");
-    fosc1->SetParName(2,"#omega");
-    fosc1->SetParName(3,"#phi");
-    fosc1->SetParName(4,"#lambda");
     
     int histIdx=0;
     for(auto p : fDataToPlotIdx)// loop chronological (files sorted)  including last duplicates only
@@ -1309,32 +1304,141 @@ double SidsSummary::Chi2FitM0(double *t,double *par)
 
 void SidsSummary::DoChi2Fit(bool Draw)
 {
+    string Method("RooFit");
     
+    
+    if(Method=="ROOT")
+    {
+//*
+        if(fexp1)
+        {
+            delete fexp1;
+            fexp1=NULL;
+            fexp1 = new TF1("fexp1",Chi2FitM0,fx_min,fx_max,2);
+        }
+        else 
+            fexp1 = new TF1("fexp1",Chi2FitM0,fx_min,fx_max,2);	
+        fexp1->SetParameters(fNormFactInit,flambdaInit);
+        fexp1->SetParName(0,"N_0");
+        fexp1->SetParName(1,"#lambda");
 
-    fexp1->SetRange(fx_min,fx_max);
-    fexp1->SetParameters(fNormFactInit,flambdaInit);
-    fexp1->SetParLimits(0,fNormFact_Min,fNormFact_Max);
-    fexp1->SetParLimits(1,flambda_Min,flambda_Max); 
+        if(fosc1)
+        {
+            delete fosc1;
+            fosc1=NULL;
+            fosc1 = new TF1("fosc1",Chi2FitM1,fx_min,fx_min,5);
+        }
+        else
+            fosc1 = new TF1("fosc1",Chi2FitM1,fx_min,fx_min,5);
+        fosc1->SetParameters(fNormFactInit,fampInit,fOmegaInit,fPhiInit,flambdaInit);	//p0=N,, p2=a, p3=w, p4=phi, p5=lambda_tot
+        fosc1->SetParName(0,"N_0");
+        fosc1->SetParName(1,"a");
+        fosc1->SetParName(2,"#omega");
+        fosc1->SetParName(3,"#phi");
+        fosc1->SetParName(4,"#lambda");
 
-    fosc1->SetRange(fx_min,fx_max);
-    fosc1->SetParameters(fNormFactInit,fampInit,fOmegaInit,fPhiInit,flambdaInit);
-    fosc1->SetParLimits(0,fNormFact_Min,fNormFact_Max); 
-    fosc1->SetParLimits(1,flambda_Min,flambda_Max); 
-    fosc1->SetParLimits(2,famp_Min,famp_Max); 
-    fosc1->SetParLimits(3,fOmega_Min,fOmega_Max); 
-    fosc1->SetParLimits(4,fPhi_Min,fPhi_Max); 
+        fexp1->SetRange(fx_min,fx_max);
+        fexp1->SetParameters(fNormFactInit,flambdaInit);
+        fexp1->SetParLimits(0,fNormFact_Min,fNormFact_Max);
+        fexp1->SetParLimits(1,flambda_Min,flambda_Max); 
+
+        fosc1->SetRange(fx_min,fx_max);
+        fosc1->SetParameters(fNormFactInit,fampInit,fOmegaInit,fPhiInit,flambdaInit);
+        fosc1->SetParLimits(0,fNormFact_Min,fNormFact_Max); 
+        fosc1->SetParLimits(1,flambda_Min,flambda_Max); 
+        fosc1->SetParLimits(2,famp_Min,famp_Max); 
+        fosc1->SetParLimits(3,fOmega_Min,fOmega_Max); 
+        fosc1->SetParLimits(4,fPhi_Min,fPhi_Max); 
+
+        fECDecayTimes->Fit(fexp1, "RB","",fx_min,fx_max);
+        fECDecayTimes->Fit(fosc1, "RB","",fx_min,fx_max);
+
+
+        fCanvas2->cd();
+        fECDecayTimes->Draw();
+        fexp1->SetLineColor(kRed);
+        fosc1->SetLineColor(kBlue);
+
+        fexp1->Draw("SAME");
+        fosc1->Draw("SAME");
+    }
+   // */
     
-    fECDecayTimes->Fit(fexp1, "RB","",fx_min,fx_max);
-    fECDecayTimes->Fit(fosc1, "RB","",fx_min,fx_max);
+    
+    if(Method=="RooFit")
+    {
+        RooDataHist ReducedDataSet("BinnedData","BinnedData",*fx,fECDecayTimes);
+
+
+        RooChi2Var Chi20("Chi2M0","Chi2M0",*fpdfH0,ReducedDataSet,true);
+        RooMinuit m1(Chi20);
+        m1.migrad();
+        // m1.hesse();
+        RooFitResult* r1 = m1.save() ;
+
+        fpdfH0->fitTo(ReducedDataSet,RooFit::Range(fx_min,fx_max));
+        fpdfH1->fitTo(ReducedDataSet,RooFit::Range(fx_min,fx_max));
+
+        RooChi2Var Chi21("Chi2M1","Chi2M1",*fpdfH1,ReducedDataSet,true);
+        RooMinuit m2(Chi21);
+        m2.migrad();
+        // m2.hesse();
+        RooFitResult* r2 = m2.save() ;
+
+        //Plotting Bussiness
+        RooPlot* xframe = fx->frame(RooFit::Title("Binned data and Chi2 fit"));
+        ReducedDataSet.plotOn(xframe, RooFit::Name("BinnedData"));
+        fpdfH0->plotOn(xframe,RooFit::Name("Chi2H0"));
+        fpdfH1->plotOn(xframe,RooFit::Name("Chi2H1"));
+
+        fpdfH0->plotOn(xframe,RooFit::LineColor(kRed));
+        fpdfH1->plotOn(xframe,RooFit::LineColor(kBlue));
+        xframe->Draw();
+
+        //Goodness of Fit
+        double chi2ReducedM0 = xframe->chiSquare("Chi2H0","BinnedData",2);
+        double chi2M0=Chi20.getVal();
+        //double chi2ReducedM0 = xframe->chiSquare("Chi2H0","BinnedData");
+        double ndoff = xframe->GetNbinsX();
+        //cout<<"chi2/ndoff (M0): "<<chi2M0<<"/"<<ndoff<<'\t'<<chi2ReducedM0<<endl;
+
+
+        double chi2M1=Chi21.getVal();
+        double chi2ReducedM1 = xframe->chiSquare("Chi2H1","BinnedData",5);
+        //double chi2ReducedM1 = xframe->chiSquare("Chi2H1","BinnedData");
+        double ndoffM1 = xframe->GetNbinsX();
+        //cout<<"chi2/ndoff (M1): "<<chi2M1<<"/"<<ndoffM1<<'\t'<<chi2ReducedM1<<endl;
+
+        MQLOG(INFO)<<"chi2/ndoff (M0): "<<chi2ReducedM0;
+        MQLOG(INFO)<<"chi2/ndoff (M1): "<<chi2ReducedM1;
+    
+    }
+    
+    /*
+    //RooDataSet* ReducedDataSet = (RooDataSet*) fECdata->reduce(*fx,CutRange.c_str()) ;
+    RooPlot* xframe0 = fx->frame(RooFit::Title("Binned data and Chi2 fit"));
+    ReducedDataSet->plotOn(xframe0,RooFit::Binning(fBinning), Name("data_chi2"), DataError( RooAbsData::SumW2 ));
+    fpdfH0->plotOn(xframe0,RooFit::LineColor(kRed));
+    fpdfH1->plotOn(xframe0,RooFit::LineColor(kBlue));
+
     
     
-    fCanvas2->cd();
-    fECDecayTimes->Draw();
-    fexp1->SetLineColor(kRed);
-    fosc1->SetLineColor(kBlue);
     
-    fexp1->Draw("SAME");
-    fosc1->Draw("SAME");
+    // to get a chi2 value we need to plot the complete pdf, for this as long as we never draw it we are ok.
+    RooPlot *p = MASS->frame();
+    SignalData->plotOn(p, Binning(bins), Name("data_chi2"), DataError( RooAbsData::SumW2 )); 
+    pdf_total->plotOn(p, Range("fitRange"), Normalization(1.0,RooAbsReal::RelativeExpected), Name("curve_chi2"));
+    // There is a method within RooPlot called chiSquare(). This returns the reduced chi2 which when multiplied out
+    // by the number of bins gives the actual chi2 fit between the .
+    chi2 = p->chiSquare( "curve_chi2", "data_chi2") * bins;
+    // The total number of degrees of freedom is defined as the number of bins subtracted by the free floating parameters
+    // in the fit. We already know the number of bins as we specified it, so the free params (we also know) but can be
+    // obtained using:-
+    Int_t floated = static_cast<Int_t>(fitResult->floatParsFinal().getSize());
+ 
+    std::cout << "Chi2 = " << chi2 << "  (for "<< bins << " bins and " << floated << " floating params)" << std::endl;
+    std::cout<<" Prob(chi2,ndof) of above = " << TMath::Prob(chi2, bins-floated) << std::endl;    
+    */
 
 }
 
