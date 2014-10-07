@@ -27,7 +27,6 @@ public:
     SidsFitButtons(const TGWindow *p, int ButtonNumber=1,const char *name="", std::string label1="",std::string label2="", std::string label3="");
     virtual ~SidsFitButtons();
     void AddButton();
-    void SetUpGui();
     void GetEntry1(char* val);
     void GetEntry2(char* val);
     void GetEntry3(char* val);
