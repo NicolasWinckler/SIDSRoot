@@ -124,7 +124,8 @@ public:
     {
         kUnbinnedLikelihood,
         kBinnedLikelihood,
-        kChi2
+        kChi2,
+        kPNLL
     };
     
     SidsSummary(const TGWindow *p, int w, int h, MQconfig SamplerConfig, std::string Filename="");
@@ -147,6 +148,7 @@ public:
     static double Chi2FitM0(double *t,double *par);
     static double Chi2FitM1(double *t,double *par);
     void DoChi2Fit(bool Draw);
+    void DoPNLL(bool Draw);
 
 protected:
     TRootEmbeddedCanvas  *fEc;                  // embedded canvas (left))

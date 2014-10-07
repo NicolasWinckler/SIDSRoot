@@ -290,7 +290,8 @@ void SidsSummary::SetupGUI()
    TGComboBox *combo = new TGComboBox(hfrmDrawNBox);
    combo->AddEntry("Unbinned Likelihood", kUnbinnedLikelihood);
    combo->AddEntry("Binned Likelihood", kBinnedLikelihood);
-   combo->AddEntry("Chi2", kChi2);
+   combo->AddEntry("Unbinned Likelihood Ratio Profile", kPNLL);
+   combo->AddEntry("Binned Chi2", kChi2);
    //combo->Connect("Selected(Int_t)", "SidsSummary", this, "ChangeMode(Int_t)");
    //combo->Connect("Selected(Int_t)", "SidsSummary", this, "DoDraw(Int_t)");
    combo->Connect("Selected(Int_t)", "SidsSummary", this, "DoFitUpdate(Int_t)");
@@ -539,7 +540,7 @@ void SidsSummary::InitParameters()
         // set hist content for each file
         fNEC->SetBinContent(histIdx+1,NumbEC);
         fPfreq->SetBinContent(histIdx+1,freq);
-        
+        fPfreq->GetYaxis()->SetRangeUser(244.90e+6,244.93e+6);
         for(unsigned int j(0);j<ECDecayEvents.size();j++)
         {
             double t_ec=(double)ECDecayEvents[j].GetDecayTime();
@@ -1082,7 +1083,11 @@ void SidsSummary::DoDraw(Int_t BoxID)
             break;
         }
     
-    
+        case kPNLL :
+        {
+            DoPNLL(true);
+            break;
+        }
     }
     
     //fECDecayTimes->Draw();
@@ -1301,6 +1306,48 @@ double SidsSummary::Chi2FitM0(double *t,double *par)
     return fitval;
 }
 
+
+
+
+void SidsSummary::DoPNLL(bool Draw)
+{
+    string strXmin;
+    ostringstream ossTemp1;
+    ossTemp1 << fx_min;
+    strXmin = ossTemp1.str();
+
+    string strXmax;
+    ostringstream ossTemp2;
+    ossTemp2 << fx_max;
+    strXmax = ossTemp2.str();
+    
+    string CutRange="x>"+strXmin;
+    CutRange+=" && x<";
+    CutRange+=strXmax;
+    ReInitRooFitPar();
+    
+    
+    RooDataSet* ReducedDataSet = (RooDataSet*) fECdata->reduce(*fx,CutRange.c_str()) ; 
+    //fomega1->setVal(3.7);
+    fpdfH1->fitTo(*ReducedDataSet);
+    RooAbsReal* NLL= fpdfH1->createNLL(*ReducedDataSet);
+    //double NegLogL=NLL->getValV();
+    RooAbsReal *pnll = NLL->createProfile(*fomega1);
+
+    // * Double_t findRoot(RooRealVar& x, Double_t xmin, Double_t xmax, Double_t yval)
+    // * Return value of x (in range xmin,xmax) at which function equals yval.
+    // * (Calculation is performed with Brent root finding algorithm)
+
+
+    RooPlot* fr1 = fomega1->frame(Bins(fBinning), 
+            //Range(mu-Ns*sigma,mu+Ns*sigma),
+            Range(fOmega_Min,fOmega_Max),
+            Title("Unbinned Likelihood Ratio Profile"));
+    pnll->plotOn(fr1,LineColor(kBlue),ShiftToZero());
+    //NLL->plotOn(fr1,ShiftToZero(),LineStyle(kDashed),LineColor(kBlue)) ;
+    fr1->Draw();
+
+}
 
 void SidsSummary::DoChi2Fit(bool Draw)
 {
