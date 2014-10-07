@@ -1067,6 +1067,8 @@ void SidsSummary::DoDraw(Int_t BoxID)
     {
         case kUnbinnedLikelihood :
         {
+            MQLOG(INFO)<<"*********************************************";
+            MQLOG(INFO)<<"************* Unbinned Likelihood Fit method ***************"<<endl;
             UnbinnedLikelihoodFit(true);
             break;
         }
@@ -1079,12 +1081,16 @@ void SidsSummary::DoDraw(Int_t BoxID)
         
         case kChi2 :
         {
+            MQLOG(INFO)<<"*********************************************";
+            MQLOG(INFO)<<"************* Chi2 Fit method ***************"<<endl;
             DoChi2Fit(true);
             break;
         }
     
         case kPNLL :
         {
+            MQLOG(INFO)<<"*********************************************";
+            MQLOG(INFO)<<"********** Negative Likelihood Ratio Profile method ************"<<endl;
             DoPNLL(true);
             break;
         }
