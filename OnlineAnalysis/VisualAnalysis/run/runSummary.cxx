@@ -114,9 +114,13 @@ int main(int argc, char** argv)
     ConfigParameter.SetValue("Phi_Max",fPhi_Max);
     ConfigParameter.SetValue("Phi_Min",fPhi_Min);
     
+    double fNormFactInit=5.e+3;
+    double fNormFact_Max=1.e+10;
+    double fNormFact_Min=0.;
     
-    
-    
+    ConfigParameter.SetValue("NormFactInit",fNormFactInit);
+    ConfigParameter.SetValue("NormFact_Max",fNormFact_Max);
+    ConfigParameter.SetValue("NormFact_Min",fNormFact_Min);
     
     bool startgui=true;
     

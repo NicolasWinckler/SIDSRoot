@@ -59,10 +59,20 @@ SidsSummary::SidsSummary(const TGWindow *p, int w, int h,MQconfig SamplerConfig,
         fNEC(NULL), fPfreq(NULL), fECFreq(NULL), fVslider1(NULL), fControlFrame(NULL),
         fFileName(Filename.c_str()), fFileInfo(), 
         fDecayData() ,fDetectorID("RSA51") , fParentFreq(0.),
-        fParConfig(SamplerConfig), fInputFile(NULL), fBinning(100),
+        fParConfig(SamplerConfig), fInputFile(NULL), fBinning(100),fFitID(kUnbinnedLikelihood),
+        fNormFactframe(NULL),
+        fBinningframe(NULL),
+        fObsframe(NULL),
+        flambdaframe(NULL),
+        fampframe(NULL),
+        fOmegaframe(NULL),
+        fPhiframe(NULL),
         fDecayCounter(0), fHisto1DCounter(0), fHisto2DCounter(0), fHeaderCounter(0),
         fReadyToSend(false), fSampler(false),
         fx_min(0.), fx_max(0.),
+        fNormFactInit(0.),
+        fNormFact_Max(0.),
+        fNormFact_Min(0.),
         flambdaInit(0.), flambda_Max(0.), flambda_Min(0.),
         fampInit(0.), famp_Max(0.), famp_Min(0.),
         fOmegaInit(0.), fOmega_Max(0.), fOmega_Min(0.),
@@ -70,7 +80,7 @@ SidsSummary::SidsSummary(const TGWindow *p, int w, int h,MQconfig SamplerConfig,
         fx(NULL), flambda0(NULL),
         flambda1(NULL), famp1(NULL), fomega1(NULL), fphi1(NULL),
         fpdfH0(NULL), fpdfH1(NULL), fECdata(NULL), 
-        fFitResultH0(NULL), fFitResultH1(NULL)
+        fFitResultH0(NULL), fFitResultH1(NULL), fexp1(NULL), fosc1(NULL)
 
 {
    // Constructor.
@@ -282,13 +292,67 @@ void SidsSummary::SetupGUI()
    combo->AddEntry("Binned Likelihood", kBinnedLikelihood);
    combo->AddEntry("Chi2", kChi2);
    //combo->Connect("Selected(Int_t)", "SidsSummary", this, "ChangeMode(Int_t)");
-   combo->Connect("Selected(Int_t)", "SidsSummary", this, "DoDraw(Int_t)");
+   //combo->Connect("Selected(Int_t)", "SidsSummary", this, "DoDraw(Int_t)");
+   combo->Connect("Selected(Int_t)", "SidsSummary", this, "DoFitUpdate(Int_t)");
    //combo->Select(SIDS::kRSA51);
    hfrmDrawNBox->AddFrame(combo, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
    combo->Resize(100, 20);
    // */
    fControlFrame->AddFrame(hfrmDrawNBox, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
    
+   /// ADD PAR fields
+   fObsframe = new SidsFitButtons(fControlFrame,3,"Time","Min : ","Max : ", "Binning : ");
+   fControlFrame->AddFrame(fObsframe, new TGLayoutHints(kLHintsLeft,2,2,2,5));
+   
+   fObsframe->SetEntry1(fx_min);
+   fObsframe->SetEntry2(fx_max);
+   fObsframe->SetEntry3((double)fBinning);
+   
+   /// ADD PAR fields
+   fNormFactframe = new SidsFitButtons(fControlFrame,3,"Normalization Factor","Min : ","Max : ", "Init : ");
+   fControlFrame->AddFrame(fNormFactframe, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
+   
+   fNormFactframe->SetEntry1(fNormFact_Min);
+   fNormFactframe->SetEntry2(fNormFact_Max);
+   fNormFactframe->SetEntry3(fNormFactInit);
+   
+   
+   /// ADD PAR fields
+   flambdaframe = new SidsFitButtons(fControlFrame,3,"Lambda","Min : ","Max : ", "Init : ");
+   fControlFrame->AddFrame(flambdaframe, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
+   
+   flambdaframe->SetEntry1(flambda_Min);
+   flambdaframe->SetEntry2(flambda_Max);
+   flambdaframe->SetEntry3(flambdaInit);
+   
+   /// ADD PAR fields
+   fampframe = new SidsFitButtons(fControlFrame,3,"amplitude","Min : ","Max : ", "Init : ");
+   fControlFrame->AddFrame(fampframe, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
+   
+   fampframe->SetEntry1(famp_Min);
+   fampframe->SetEntry2(famp_Max);
+   fampframe->SetEntry3(fampInit);
+   
+   /// ADD PAR fields
+   fOmegaframe = new SidsFitButtons(fControlFrame,3,"Omega","Min : ","Max : ", "Init : ");
+   fControlFrame->AddFrame(fOmegaframe, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
+   
+   fOmegaframe->SetEntry1(fOmega_Min);
+   fOmegaframe->SetEntry2(fOmega_Max);
+   fOmegaframe->SetEntry3(fOmegaInit);
+   
+   /// ADD PAR fields
+   fPhiframe = new SidsFitButtons(fControlFrame,3,"Phi","Min : ","Max : ", "Init : ");
+   fControlFrame->AddFrame(fPhiframe, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
+   
+   fPhiframe->SetEntry1(fPhi_Min);
+   fPhiframe->SetEntry2(fPhi_Max);
+   fPhiframe->SetEntry3(fPhiInit);
+   
+   TGTextButton *draw = new TGTextButton(fControlFrame,"&Update Fit");
+   draw->Connect("Clicked()","SidsSummary",this,"DoFitUpdate()");
+   
+   fControlFrame->AddFrame(draw, new TGLayoutHints(kLHintsCenterX,2,2,2,5));
    
    
    hfrm->AddFrame(fControlFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandY));
@@ -302,7 +366,7 @@ void SidsSummary::SetupGUI()
    //hf3 = new TGVerticalFrame(this, 0, 0, 0);
 
    combo->Select(kUnbinnedLikelihood);
-   
+   //combo->Select(kChi2);
    
    TGVerticalFrame *ExitAndValidFrame = new TGVerticalFrame(hf3, 10, 10);
    
@@ -335,37 +399,6 @@ void SidsSummary::SetupGUI()
 }
 
 
-//______________________________________________________________________________
-void SidsSummary::ChangeMode(Int_t BoxID)
-{
-    
-    switch(BoxID)
-    {
-        case kUnbinnedLikelihood :
-        {
-            
-            DoDraw(BoxID);
-            break;
-        }
-        
-        case kBinnedLikelihood :
-        {
-            
-            DoDraw(BoxID);
-            break;
-        }
-        
-        case kChi2 :
-        {
-            
-            DoDraw(BoxID);
-            break;
-        }
-    
-    
-    }
-    
-}
 
 
 //______________________________________________________________________________
@@ -384,6 +417,10 @@ void SidsSummary::InitParameters()
     
     fx_min=fParConfig.GetValue<double>("x_min");
     fx_max=fParConfig.GetValue<double>("x_max");
+    
+    fNormFactInit=fParConfig.GetValue<double>("NormFactInit");
+    fNormFact_Max=fParConfig.GetValue<double>("NormFact_Max");
+    fNormFact_Min=fParConfig.GetValue<double>("NormFact_Min");
     
     flambdaInit=fParConfig.GetValue<double>("LambdaInit");
     flambda_Max=fParConfig.GetValue<double>("Lambda_Max");
@@ -474,13 +511,26 @@ void SidsSummary::InitParameters()
     fomega1 = new RooRealVar("#omega_{1}","#omega_{1}",fOmegaInit,fOmega_Min,fOmega_Max);
     fphi1 = new RooRealVar("#phi_{1}","#phi_{1}",fPhiInit,fPhi_Min,fPhi_Max);
     
-    cout<<"OK0"<<endl;
     fpdfH0 = new RooGenericPdf("H0","#lambda_{0}*exp(-#lambda_{0}*x)",RooArgSet(*fx,*flambda0));
     fpdfH1 = new SidsRooOscModel("H1","H1",*fx,*flambda1,*famp1,*fomega1,*fphi1);
     
     fECdata= new RooDataSet("DataSet","DataSet",*fx);
     
     
+    
+    
+    fexp1 = new TF1("fexp1",Chi2FitM0,fx_min,fx_max,2);	
+    fexp1->SetParameters(fNormFactInit,flambdaInit);
+    fexp1->SetParName(0,"N_0");
+    fexp1->SetParName(1,"#lambda");
+
+    fosc1 = new TF1("fosc1",Chi2FitM1,fx_min,fx_min,5);
+    fosc1->SetParameters(fNormFactInit,fampInit,fOmegaInit,fPhiInit,flambdaInit);	//p0=N,, p2=a, p3=w, p4=phi, p5=lambda_tot
+    fosc1->SetParName(0,"N_0");
+    fosc1->SetParName(1,"a");
+    fosc1->SetParName(2,"#omega");
+    fosc1->SetParName(3,"#phi");
+    fosc1->SetParName(4,"#lambda");
     
     int histIdx=0;
     for(auto p : fDataToPlotIdx)// loop chronological (files sorted)  including last duplicates only
@@ -511,10 +561,57 @@ void SidsSummary::InitParameters()
     
 }
 
+
+void SidsSummary::DoFitUpdate(Int_t BoxID)
+{
+    fFitID=BoxID;
+    UpdateFitPar();
+    UpdateHistData(fx_min, fx_max);
+    ReInitRooFitPar();
+    DoDraw(fFitID);
+}
+
+
+void SidsSummary::DoFitUpdate()
+{
+    UpdateFitPar();
+    UpdateHistData(fx_min, fx_max);
+    ReInitRooFitPar();
+    DoDraw(fFitID);
+}
+
+void SidsSummary::UpdateFitPar()
+{
+   fx_min=fObsframe->GetVal1();
+   fx_max=fObsframe->GetVal2();
+   fBinning=(int)fObsframe->GetVal3();
+   
+   flambda_Min=flambdaframe->GetVal1();
+   flambda_Max=flambdaframe->GetVal2();
+   flambdaInit=flambdaframe->GetVal3();
+   
+   fNormFact_Min=fNormFactframe->GetVal1();
+   fNormFact_Max=fNormFactframe->GetVal2();
+   fNormFactInit=fNormFactframe->GetVal3();
+   
+   famp_Min=fampframe->GetVal1();
+   famp_Max=fampframe->GetVal2();
+   fampInit=fampframe->GetVal3();
+   
+   fOmega_Min=fOmegaframe->GetVal1();
+   fOmega_Max=fOmegaframe->GetVal2();
+   fOmegaInit=fOmegaframe->GetVal3();
+   
+   fPhi_Min=fPhiframe->GetVal1();
+   fPhi_Max=fPhiframe->GetVal2();
+   fPhiInit=fPhiframe->GetVal3();
+}
+
 void SidsSummary::UpdateHistData(double tmin, double tmax)
 {
     fECDecayTimes->Reset();
     fECFreq->Reset();
+    fECDecayTimes->SetBins(fBinning,tmin,tmax);
     
     //int histIdx=0;
     for(auto p : fDataToPlotIdx)// loop chronological (files sorted)  including last duplicates only
@@ -986,7 +1083,7 @@ void SidsSummary::DoDraw(Int_t BoxID)
         
         case kChi2 :
         {
-            MQLOG(ERROR)<<"Function not implemented yet";
+            DoChi2Fit(true);
             break;
         }
     
@@ -1196,7 +1293,50 @@ void SidsSummary::UnbinnedLikelihoodFit(bool Draw)
 
 
 
+double SidsSummary::Chi2FitM1(double *t,double *par)
+{
+    	//p0=N, p1=Lambda_EC, p2=a, p3=w, p4=phi, p5=lambda_tot
+	double fitval = par[0]*(1+par[1]*TMath::Cos(par[2]*t[0]+par[3]))*TMath::Exp(-par[4]*t[0]);
+	return fitval;
+}
 
+double SidsSummary::Chi2FitM0(double *t,double *par)
+{
+    double fitval = par[0]*TMath::Exp(-par[1]*t[0]);
+    return fitval;
+}
+
+
+void SidsSummary::DoChi2Fit(bool Draw)
+{
+    
+
+    fexp1->SetRange(fx_min,fx_max);
+    fexp1->SetParameters(fNormFactInit,flambdaInit);
+    fexp1->SetParLimits(0,fNormFact_Min,fNormFact_Max);
+    fexp1->SetParLimits(1,flambda_Min,flambda_Max); 
+
+    fosc1->SetRange(fx_min,fx_max);
+    fosc1->SetParameters(fNormFactInit,fampInit,fOmegaInit,fPhiInit,flambdaInit);
+    fosc1->SetParLimits(0,fNormFact_Min,fNormFact_Max); 
+    fosc1->SetParLimits(1,flambda_Min,flambda_Max); 
+    fosc1->SetParLimits(2,famp_Min,famp_Max); 
+    fosc1->SetParLimits(3,fOmega_Min,fOmega_Max); 
+    fosc1->SetParLimits(4,fPhi_Min,fPhi_Max); 
+    
+    fECDecayTimes->Fit(fexp1, "RB","",fx_min,fx_max);
+    fECDecayTimes->Fit(fosc1, "RB","",fx_min,fx_max);
+    
+    
+    fCanvas2->cd();
+    fECDecayTimes->Draw();
+    fexp1->SetLineColor(kRed);
+    fosc1->SetLineColor(kBlue);
+    
+    fexp1->Draw("SAME");
+    fosc1->Draw("SAME");
+
+}
 
 
 

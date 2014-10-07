@@ -46,6 +46,7 @@
 #include <TFrame.h>
 #include "TGTripleSlider.h"
 
+#include "TMath.h"
 #include "TPaveText.h"
 #include "RooRealVar.h" 
 #include "RooDataSet.h"
@@ -91,7 +92,7 @@
 #include "SidsDecayTxtField.h"
 #include "header.h"
 //#include "RooMyPdfDict.h"
-
+#include "SidsFitButtons.h"
 
 using namespace RooFit;
 using namespace RooStats;
@@ -136,10 +137,16 @@ public:
     void DoCloseWindow();
     void DoExit();
     void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
-    void ChangeMode(Int_t BoxID);
     void UnbinnedLikelihoodFit(bool Draw);
     void UpdateHistData(double tmin=0., double tmax=70.);
+    void UpdateFitPar();
+    void DoFitUpdate(Int_t BoxID);
+    void DoFitUpdate();
     
+    static double Chi2FitM0(double *t,double *par);
+    static double Chi2FitM1(double *t,double *par);
+    void DoChi2Fit(bool Draw);
+
 protected:
     TRootEmbeddedCanvas  *fEc;                  // embedded canvas (left))
     TRootEmbeddedCanvas  *fEc2;                 // embedded canvas (right)
@@ -170,11 +177,23 @@ protected:
     MQconfig             fParConfig;            // Parameter container
     TFile                *fInputFile;           // Input root file
     int                  fBinning;
+    int                  fFitID;
     
+    SidsFitButtons* fNormFactframe;
+    SidsFitButtons* fBinningframe;
+    SidsFitButtons* fObsframe;
+    SidsFitButtons* flambdaframe;
+    SidsFitButtons* fampframe;
+    SidsFitButtons* fOmegaframe;
+    SidsFitButtons* fPhiframe;
     
     // fit par
     double fx_min;
     double fx_max;
+    
+    double fNormFactInit;
+    double fNormFact_Max;
+    double fNormFact_Min;
     
     double flambdaInit;
     double flambda_Max;
@@ -206,6 +225,8 @@ protected:
     
     RooFitResult* fFitResultH0;
     RooFitResult* fFitResultH1;
+    TF1 *fexp1;
+    TF1 *fosc1;
     
     std::vector<TH1D*> f1DHisto;                // Input 1D-Histos
     std::vector<TH2D*> f2DHisto;                // Input 2D-Histos

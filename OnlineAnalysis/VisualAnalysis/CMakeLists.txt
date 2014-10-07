@@ -54,6 +54,7 @@ Set(SRCS
     GUI/SidsSummary.cxx
     GUI/SidsDecayTxtField.cxx
     GUI/SidsQualityTagField.cxx
+    GUI/SidsFitButtons.cxx
     ${SIDS_SOURCE_DIR}/time2root/header.cxx
     Models/SidsRooOscModel.cxx
 )

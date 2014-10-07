@@ -72,6 +72,10 @@ MQconfig::MQconfig()
     fKeyDoubleValues.push_back("Lambda_Max");
     fKeyDoubleValues.push_back("Lambda_Min");
     
+    fKeyDoubleValues.push_back("NormFactInit");
+    fKeyDoubleValues.push_back("NormFact_Max");
+    fKeyDoubleValues.push_back("NormFact_Min");
+    
     fKeyDoubleValues.push_back("AmpInit");
     fKeyDoubleValues.push_back("Amp_Max");
     fKeyDoubleValues.push_back("Amp_Min");
