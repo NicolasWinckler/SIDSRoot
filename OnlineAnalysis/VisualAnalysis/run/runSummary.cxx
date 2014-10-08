@@ -27,13 +27,13 @@ using std::stringstream;
 
 int main(int argc, char** argv)
 {
-    int MinArg=5;
-    int MaxArg=7;
+    int MinArg=6;
+    int MaxArg=8;
     if (argc < MinArg || argc>MaxArg)
     {
         MQLOG(ERROR)<< "Number of argument incorrect. ("<<argc<<" instead of 6)";
         MQLOG(INFO) << "Script usage: startVisualAnalysis \t showfiles.sh command1 command2 \n";
-        MQLOG(INFO) << "Binary usage: ShowStatus treeName branch Directory Resultsfile command1 command2 \n"<<endl;
+        MQLOG(INFO) << "Binary usage: ShowStatus treeName branch Directory Resultsfile OutputDir command1 command2 \n"<<endl;
         return 1;
     }
     int i = 1;
@@ -46,12 +46,15 @@ int main(int argc, char** argv)
     ++i;
     string Resultsfilename(argv[i]);
     ++i;
+    string OutputDir(argv[i]);
+    ++i;
     
     MQconfig ConfigParameter;
     ConfigParameter.SetValue("InputDirectory",dirname);
     ConfigParameter.SetValue("InputFile",Resultsfilename);
     ConfigParameter.SetValue("TreeName",treename);
     ConfigParameter.SetValue("Branch",branchname);
+    ConfigParameter.SetValue("OutputDirectory",OutputDir);
     
     string detID("RSA51");
     ConfigParameter.SetValue("DetectorID",detID);

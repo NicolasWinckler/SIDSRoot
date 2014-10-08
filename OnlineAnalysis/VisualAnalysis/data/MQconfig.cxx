@@ -32,7 +32,8 @@ MQconfig::MQconfig()
     fKeyStringValues.push_back("KickerPrefix");
     fKeyStringValues.push_back("KickerSufffix");
     fKeyStringValues.push_back("UserName");
-    
+    fKeyStringValues.push_back("InputDirectory");
+    fKeyStringValues.push_back("OutputDirectory");
     
     /////////////////////////////////////////////////////////////////////
     /// Define int keys
@@ -50,7 +51,7 @@ MQconfig::MQconfig()
     fKeyIntValues.push_back("BinZoomTH2Window");
     fKeyIntValues.push_back("BinningTraces");
     fKeyIntValues.push_back("BinningFreqTH2");
-    fKeyIntValues.push_back("InputDirectory");
+    
     
     fKeyIntValues.push_back("Binning");
     

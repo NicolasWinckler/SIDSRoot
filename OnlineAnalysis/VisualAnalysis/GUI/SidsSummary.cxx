@@ -1348,7 +1348,7 @@ void SidsSummary::UnbinnedLikelihoodFit(bool Draw)
 
 void SidsSummary::DoSaveFigure()
 {
-    string dir=fParConfig.GetValue<string>("InputDirectory");
+    string dir=fParConfig.GetValue<string>("OutputDirectory");
     dir+="/go2014figures/Results/";
     
     string figfile=dir+fFigureName;

@@ -10,5 +10,6 @@ branch="EsrInjData."
 Resultsfile="$ESRDATAPATHOUT/SidsVisualDecayResults.root"
 #Directory="@SIDS_BINARY_DIR@"
 Directory=$ESRDATAPATHIN
+DirectoryOut=$ESRDATAPATHOUT
 
-@SIDS_BINARY_DIR@/bin/ShowStatus $treeName $branch $Directory $Resultsfile $command1 $command2
+@SIDS_BINARY_DIR@/bin/ShowStatus $treeName $branch $Directory $Resultsfile $command1 $command2 $DirectoryOut
