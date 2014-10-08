@@ -76,7 +76,7 @@ SidsSummary::SidsSummary(const TGWindow *p, int w, int h,MQconfig SamplerConfig,
         flambdaInit(0.), flambda_Max(0.), flambda_Min(0.),
         fampInit(0.), famp_Max(0.), famp_Min(0.),
         fOmegaInit(0.), fOmega_Max(0.), fOmega_Min(0.),
-        fPhiInit(0.), fPhi_Max(0.), fPhi_Min(0.),
+        fPhiInit(0.), fPhi_Max(0.), fPhi_Min(0.), fFigureName(),
         fx(NULL), flambda0(NULL),
         flambda1(NULL), famp1(NULL), fomega1(NULL), fphi1(NULL),
         fpdfH0(NULL), fpdfH1(NULL), fChi2pdfH0(NULL), fChi2pdfH1(NULL),fECdata(NULL), 
@@ -288,10 +288,11 @@ void SidsSummary::SetupGUI()
    
    //*
    TGComboBox *combo = new TGComboBox(hfrmDrawNBox);
-   combo->AddEntry("Unbinned Likelihood", kUnbinnedLikelihood);
-   combo->AddEntry("Binned Likelihood", kBinnedLikelihood);
+   combo->AddEntry("Unbinned Likelihood fit", kUnbinnedLikelihood);
+   combo->AddEntry("Binned Likelihood fit", kBinnedLikelihood);
    combo->AddEntry("Unbinned Likelihood Ratio Profile", kPNLL);
-   combo->AddEntry("Binned Chi2", kChi2);
+   combo->AddEntry("Binned Chi2 fit", kChi2);
+   combo->AddEntry("Binned Data only (No Fit)", kNoFit);
    //combo->Connect("Selected(Int_t)", "SidsSummary", this, "ChangeMode(Int_t)");
    //combo->Connect("Selected(Int_t)", "SidsSummary", this, "DoDraw(Int_t)");
    combo->Connect("Selected(Int_t)", "SidsSummary", this, "DoFitUpdate(Int_t)");
@@ -353,7 +354,13 @@ void SidsSummary::SetupGUI()
    TGTextButton *draw = new TGTextButton(fControlFrame,"&Update Fit");
    draw->Connect("Clicked()","SidsSummary",this,"DoFitUpdate()");
    
+   
    fControlFrame->AddFrame(draw, new TGLayoutHints(kLHintsCenterX,2,2,2,5));
+   
+   
+   TGTextButton *SaveFig = new TGTextButton(fControlFrame,"&Save main Figure");
+   SaveFig->Connect("Clicked()","SidsSummary",this,"DoSaveFigure()");
+   fControlFrame->AddFrame(SaveFig, new TGLayoutHints(kLHintsCenterX,2,2,2,5));
    
    
    hfrm->AddFrame(fControlFrame, new TGLayoutHints(kLHintsRight | kLHintsExpandY));
@@ -1094,6 +1101,14 @@ void SidsSummary::DoDraw(Int_t BoxID)
             DoPNLL(true);
             break;
         }
+        
+        case kNoFit :
+        {
+            MQLOG(INFO)<<"*********************************************";
+            MQLOG(INFO)<<"********** Plot Data only ************"<<endl;
+            DoNothing(true);// :)
+            break;
+        }
     }
     
     //fECDecayTimes->Draw();
@@ -1115,6 +1130,8 @@ void SidsSummary::DoDraw(Int_t BoxID)
     fCanvas1->cd(4);
     fECFreq->Draw();
     fCanvas1->Update();
+    
+    MQLOG(INFO)<<"Number of analyzed EC-decay in range : "<<fECDecayTimes->GetSum();
 }
 
 
@@ -1271,33 +1288,127 @@ void SidsSummary::UnbinnedLikelihoodFit(bool Draw)
     ReInitRooFitPar();
     
     
-    RooDataSet* ReducedDataSet = (RooDataSet*) fECdata->reduce(*fx,CutRange.c_str()) ; 
+    RooDataSet* ReducedDataSet = (RooDataSet*) fECdata->reduce(*fx,CutRange.c_str()) ;
+    
+    string strNEC;
+    int NumbEC=(int)ReducedDataSet->sumEntries();
+    ostringstream ossTemp3;
+    ossTemp3 << NumbEC;
+    strNEC = ossTemp3.str();
+
+    string strBinning;
+    ostringstream ossTemp4;
+    ossTemp4 << fBinning;
+    strBinning = ossTemp4.str();
+
+    string Datatitle("Binned data and fitting functions in range [");
+    Datatitle+=strXmin;
+    Datatitle+=",";
+    Datatitle+=strXmax;
+    Datatitle+="] seconds (N_{EC}=";
+    Datatitle+=strNEC;
+    Datatitle+=", Binning=";
+    Datatitle+=strBinning;
+    Datatitle+=") ";
+    
+    
+     
     
     if(Draw)
     {
         fFitResultH0=fpdfH0->fitTo(*ReducedDataSet,RooFit::Save());
         fFitResultH1=fpdfH1->fitTo(*ReducedDataSet,RooFit::Save());
 
-        RooPlot* xframe0 = fx->frame(RooFit::Title("Binned data and fit functions with their 1-sigma error bands"));
+        RooPlot* xframe0 = fx->frame(RooFit::Title(Datatitle.c_str()));
         ReducedDataSet->plotOn(xframe0,RooFit::Binning(fBinning));
-        fpdfH0->plotOn(xframe0,RooFit::LineColor(kRed));
-        fpdfH1->plotOn(xframe0,RooFit::LineColor(kBlue));
+        
 
         RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
         fpdfH0->plotOn(xframe0,RooFit::VisualizeError(*fFitResultH0,1),RooFit::FillColor(kOrange));
         fpdfH1->plotOn(xframe0,RooFit::VisualizeError(*fFitResultH1,1),RooFit::FillColor(kOrange));
         fpdfH0->plotOn(xframe0,RooFit::VisualizeError(*fFitResultH0,1,kFALSE),RooFit::DrawOption("L"),RooFit::LineWidth(1),RooFit::LineColor(kRed),RooFit::LineStyle(kDashed));
         fpdfH1->plotOn(xframe0,RooFit::VisualizeError(*fFitResultH1,1,kFALSE),RooFit::DrawOption("L"),RooFit::LineWidth(1),RooFit::LineColor(kBlue),RooFit::LineStyle(kDashed));
+        fpdfH0->plotOn(xframe0,RooFit::LineColor(kRed));
+        fpdfH1->plotOn(xframe0,RooFit::LineColor(kBlue));
         RooMsgService::instance().setGlobalKillBelow(RooFit::INFO);
         
         xframe0->Draw();
+   
     }
     
-       
+    fFigureName="Go2014_UnbinnedLikelihoodFit_Range_";
+    fFigureName+=strXmin;
+    fFigureName+="_";
+    fFigureName+=strXmax;
+    fFigureName+="_Binning_";
+    fFigureName+=strBinning;
+    fFigureName+=".pdf";
   }
 
 
+void SidsSummary::DoSaveFigure()
+{
+    string dir=fParConfig.GetValue<string>("InputDirectory");
+    dir+="/go2014figures/Results/";
+    
+    string figfile=dir+fFigureName;
+    fCanvas2->SaveAs(figfile.c_str());
+}
 
+void SidsSummary::DoNothing(bool Draw)
+{
+    
+    
+    
+    string strXmin;
+    ostringstream ossTemp1;
+    ossTemp1 << fx_min;
+    strXmin = ossTemp1.str();
+
+    string strXmax;
+    ostringstream ossTemp2;
+    ossTemp2 << fx_max;
+    strXmax = ossTemp2.str();
+    
+    string CutRange="x>"+strXmin;
+    CutRange+=" && x<";
+    CutRange+=strXmax;
+    ReInitRooFitPar();
+    
+    
+    RooDataSet* ReducedDataSet = (RooDataSet*) fECdata->reduce(*fx,CutRange.c_str()) ; 
+    
+    string strNEC;
+    int NumbEC=(int)ReducedDataSet->sumEntries();
+    ostringstream ossTemp3;
+    ossTemp3 << NumbEC;
+    strNEC = ossTemp3.str();
+
+    string strBinning;
+    ostringstream ossTemp4;
+    ossTemp4 << fBinning;
+    strBinning = ossTemp4.str();
+
+    string Datatitle("Binned data in range [");
+    Datatitle+=strXmin;
+    Datatitle+=",";
+    Datatitle+=strXmax;
+    Datatitle+="] seconds (N_{EC}=";
+    Datatitle+=strNEC;
+    Datatitle+=", Binning=";
+    Datatitle+=strBinning;
+    Datatitle+=")";
+    RooPlot* xframe1 = fx->frame(RooFit::Title(Datatitle.c_str()));
+    ReducedDataSet->plotOn(xframe1,RooFit::Binning(fBinning));
+    xframe1->Draw();
+    fFigureName="Go2014_DataPlot_Range_";
+    fFigureName+=strXmin;
+    fFigureName+="_";
+    fFigureName+=strXmax;
+    fFigureName+="_Binning_";
+    fFigureName+=strBinning;
+    fFigureName+=".pdf";
+}
 
 double SidsSummary::Chi2FitM1(double *t,double *par)
 {
@@ -1332,6 +1443,11 @@ void SidsSummary::DoPNLL(bool Draw)
     CutRange+=strXmax;
     ReInitRooFitPar();
     
+    string strBinning;
+    ostringstream ossTemp4;
+    ossTemp4 << fBinning;
+    strBinning = ossTemp4.str();
+    
     
     RooDataSet* ReducedDataSet = (RooDataSet*) fECdata->reduce(*fx,CutRange.c_str()) ; 
     //fomega1->setVal(3.7);
@@ -1353,6 +1469,13 @@ void SidsSummary::DoPNLL(bool Draw)
     //NLL->plotOn(fr1,ShiftToZero(),LineStyle(kDashed),LineColor(kBlue)) ;
     fr1->Draw();
 
+    fFigureName="Go2014_LikelihoodRatioProfile_Range_";
+    fFigureName+=strXmin;
+    fFigureName+="_";
+    fFigureName+=strXmax;
+    fFigureName+="_Binning_";
+    fFigureName+=strBinning;
+    fFigureName+=".pdf";
 }
 
 void SidsSummary::DoChi2Fit(bool Draw)
@@ -1467,6 +1590,27 @@ void SidsSummary::DoChi2Fit(bool Draw)
     
     }
     
+    string strXmin;
+    ostringstream ossTemp1;
+    ossTemp1 << fx_min;
+    strXmin = ossTemp1.str();
+
+    string strXmax;
+    ostringstream ossTemp2;
+    ossTemp2 << fx_max;
+    strXmax = ossTemp2.str();
+    
+    string strBinning;
+    ostringstream ossTemp4;
+    ossTemp4 << fBinning;
+    strBinning = ossTemp4.str();
+    fFigureName="Go2014_LikelihoodRatioProfile_Range_";
+    fFigureName+=strXmin;
+    fFigureName+="_";
+    fFigureName+=strXmax;
+    fFigureName+="_Binning_";
+    fFigureName+=strBinning;
+    fFigureName+=".pdf";
     /*
     //RooDataSet* ReducedDataSet = (RooDataSet*) fECdata->reduce(*fx,CutRange.c_str()) ;
     RooPlot* xframe0 = fx->frame(RooFit::Title("Binned data and Chi2 fit"));

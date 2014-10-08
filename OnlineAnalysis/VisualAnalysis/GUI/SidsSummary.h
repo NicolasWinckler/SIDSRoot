@@ -125,7 +125,8 @@ public:
         kUnbinnedLikelihood,
         kBinnedLikelihood,
         kChi2,
-        kPNLL
+        kPNLL,
+        kNoFit
     };
     
     SidsSummary(const TGWindow *p, int w, int h, MQconfig SamplerConfig, std::string Filename="");
@@ -149,7 +150,8 @@ public:
     static double Chi2FitM1(double *t,double *par);
     void DoChi2Fit(bool Draw);
     void DoPNLL(bool Draw);
-
+    void DoNothing(bool Draw);
+    void DoSaveFigure();
 protected:
     TRootEmbeddedCanvas  *fEc;                  // embedded canvas (left))
     TRootEmbeddedCanvas  *fEc2;                 // embedded canvas (right)
@@ -213,6 +215,7 @@ protected:
     double fPhiInit;
     double fPhi_Max;
     double fPhi_Min;
+    string fFigureName;
     
     RooRealVar* fx;
     RooRealVar* fNorm0;

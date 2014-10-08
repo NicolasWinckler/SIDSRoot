@@ -27,7 +27,7 @@ using std::stringstream;
 
 int main(int argc, char** argv)
 {
-    if (argc != 26)
+    if (argc != 27)
     {
         MQLOG(ERROR)<<"Number of argument incorrect. ("<<argc<<" instead of 24)";
         MQLOG(INFO) <<"Script usage: startVisualAnalysis \t userName inputFile \n";
@@ -149,6 +149,8 @@ int main(int argc, char** argv)
     ConfigParameter.SetValue("ZSliderScale",ZSliderScale);
     ++i;
     
+    string dirname(argv[i]);
+    ConfigParameter.SetValue("InputDirectory",dirname);
     string outputfilename=ConfigParameter.GetValue<string>("OutputFile");
     string treename=ConfigParameter.GetValue<string>("TreeName");
     string branchname=ConfigParameter.GetValue<string>("Branch");

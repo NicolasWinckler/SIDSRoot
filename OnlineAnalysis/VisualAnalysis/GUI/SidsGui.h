@@ -119,7 +119,18 @@ public:
     void ChangeMode(Int_t BoxID);
     void DoSlider();
     void InitSlider();
-    
+
+    void DoSaveFigure()
+    {
+        string dir=fParConfig.GetValue<string>("InputDirectory");
+        dir+="/go2014figures/Traces/";
+
+        string inputname=dir+fFileName.Data();
+        int lastindex = inputname.find_last_of("."); 
+        string figfile = inputname.substr(0, lastindex);
+        figfile+=".pdf";
+        fCanvas2->SaveAs(figfile.c_str());
+    }
 protected:
     TRootEmbeddedCanvas  *fEc;                  // embedded canvas (left))
     TRootEmbeddedCanvas  *fEc2;                 // embedded canvas (right)

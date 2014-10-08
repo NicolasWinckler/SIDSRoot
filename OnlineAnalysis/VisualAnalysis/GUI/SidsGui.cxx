@@ -304,6 +304,12 @@ void SidsGui::SetupGUI()
    // */
    fControlFrame->AddFrame(hfrmDrawNBox, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
    
+   
+   TGTextButton *SaveFig = new TGTextButton(fControlFrame,"&Save main Figure");
+   SaveFig->Connect("Clicked()","SidsGui",this,"DoSaveFigure()");
+   fControlFrame->AddFrame(SaveFig, new TGLayoutHints(kLHintsExpandX,2,2,2,5));
+   
+   
    /// ADD DECAY BUTTON
    TGTextButton *AddDecay = new TGTextButton(fControlFrame,"&Add EC-Decay");
    AddDecay->Connect("Clicked()","SidsGui",this,"AddDecay()");
