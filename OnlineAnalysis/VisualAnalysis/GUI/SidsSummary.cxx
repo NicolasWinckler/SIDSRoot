@@ -1289,6 +1289,8 @@ void SidsSummary::UnbinnedLikelihoodFit(bool Draw)
     
     
     RooDataSet* ReducedDataSet = (RooDataSet*) fECdata->reduce(*fx,CutRange.c_str()) ;
+    //RooDataSet* ReducedDataSet = fpdfH0->generate(*fx,6313) ;//for sim
+    
     
     string strNEC;
     int NumbEC=(int)ReducedDataSet->sumEntries();
