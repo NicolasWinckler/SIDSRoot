@@ -177,6 +177,9 @@ add_subdirectory (field)
 add_subdirectory (OnlineAnalysis)
 add_subdirectory (OfflineAnalysis)
 
+set(INPUT_DATA_DIR "${SIDS_SOURCE_DIR}/AnalysisInput/Osc/Online/VisualAnalysis")
+file(MAKE_DIRECTORY ${INPUT_DATA_DIR})
+
 set(OUTPUT_DATA_DIR "${SIDS_SOURCE_DIR}/AnalysisOutput/Osc/Online/VisualAnalysis")
 file(MAKE_DIRECTORY ${OUTPUT_DATA_DIR})
 

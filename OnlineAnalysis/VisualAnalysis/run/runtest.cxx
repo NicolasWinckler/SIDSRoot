@@ -62,29 +62,16 @@ using namespace std;
 int main(int argc, char** argv) 
 {
 
+    int i=666;
     
-    string treename="SIDSdecayData";
-    string branchname="EsrInjData.";
-    //string outputfilename="/Users/winckler/fair/exp/SIDSRoot/AnalysisOutput/Osc/Online/VisualAnalysis/SidsVisualDecayResults.root";
-    string outputfilename="/Users/winckler/fair/exp/SIDSRoot/AnalysisOutput/Osc/Online/VisualAnalysis/SIDSDecayData.root";
-
-    string alreadyAnalyzedFilename;
-    //fInputFile = new  TFile(fFileName);
-    EsrTree *DecayTree = new EsrTree(outputfilename,treename,branchname);
-    std::vector<EsrInjData> DataList=DecayTree->GetEsrData();
-    delete DecayTree;
+    int* ptr=&i;
+    shared_ptr<int> shptr(ptr) ;
     
-    vector<string> analyzedFiles;
-    for(unsigned int k(0); k<DataList.size(); k++)
-    {
-        alreadyAnalyzedFilename=DataList[k].GetFileName();
-        analyzedFiles.push_back(alreadyAnalyzedFilename);
-    }
     
-    string dir="/Users/winckler/fair/exp/SIDSRoot/build";
-
+    int *ptr2=shptr.get();
+    //*ptr2=999;
     
-    SIDSFileManager fileman(dir,analyzedFiles);
+    cout<<"I="<<i<<endl;
     return 0;
 }
 
