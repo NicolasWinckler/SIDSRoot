@@ -1,5 +1,10 @@
 #!/bin/bash
-cd $ESRDATAPATHIN
+
+
+#cd $ESRDATAPATHIN
+
+
+cd @SIDS_SOURCE_DIR@/AnalysisInput/Osc/Online/VisualAnalysis
 
 command1=$1
 command2=$2
@@ -7,9 +12,10 @@ command2=$2
 treeName="SIDSdecayData"
 branch="EsrInjData."
 #Resultsfile="@SIDS_SOURCE_DIR@/AnalysisOutput/Osc/Online/VisualAnalysis/SidsVisualDecayResults.root"
-Resultsfile="$ESRDATAPATHOUT/SidsVisualDecayResults.root"
+Resultsfile="@SIDS_SOURCE_DIR@/AnalysisOutput/Osc/Online/VisualAnalysis/SIDS2014OfflineDecayResults.root"
 #Directory="@SIDS_BINARY_DIR@"
-Directory=$ESRDATAPATHIN
-DirectoryOut=$ESRDATAPATHOUT
+Directory=Directory="@SIDS_SOURCE_DIR@/AnalysisInput/Osc/Online/VisualAnalysis/"
+DirectoryOut="@SIDS_SOURCE_DIR@/AnalysisOutput/Osc/Online/VisualAnalysis/"
+
 
 @SIDS_BINARY_DIR@/bin/ShowStatus $treeName $branch $Directory $Resultsfile $command1 $command2 $DirectoryOut
