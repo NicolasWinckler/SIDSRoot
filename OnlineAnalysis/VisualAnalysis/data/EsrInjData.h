@@ -71,17 +71,17 @@ public:
     
     
     
-    void SetNParentInit(int N) {fNp_init=N;}
-    int GetNParentInit() {return fNp_init;}
+    void SetNParentInit(float N) {fNp_init=N;}
+    float GetNParentInit() {return fNp_init;}
     
-    void SetNParentEnd(int N) {fNp_end=N;}
-    int GetNParentEnd() {return fNp_end;}
+    void SetNParentEnd(float N) {fNp_end=N;}
+    float GetNParentEnd() {return fNp_end;}
     
-    void SetNPDaughterInit(int N) {fNd_init=N;}
-    int GetNPDaughterInit() {return fNd_init;}
+    void SetNPDaughterInit(float N) {fNd_init=N;}
+    float GetNPDaughterInit() {return fNd_init;}
     
-    void SetNDaughterEnd(int N) {fNd_end=N;}
-    int GetNDaughterEnd() {return fNd_end;}
+    void SetNDaughterEnd(float N) {fNd_end=N;}
+    float GetNDaughterEnd() {return fNd_end;}
     
     void SetNEC(int N) {fNEC=N;}
     int GetNEC() {
@@ -141,10 +141,10 @@ protected:
     std::string fFileComment;
     int fQualityTag;
     
-    int fNp_init;
-    int fNp_end;
-    int fNd_init;
-    int fNd_end;
+    float fNp_init;
+    float fNp_end;
+    float fNd_init;
+    float fNd_end;
     int fNEC;
     float fCoolFreqP;
     float fCoolFreqD;
