@@ -56,7 +56,7 @@ namespace MyData
 
 int main(int argc, char** argv) 
 {
-
+/*
     if(std::is_pod<MyData::Base>::value)
     {
         std::cout<<"Base is POD" << std::endl;
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
         std::cout<<"Derived3 is POD" << std::endl;
     }
     
-    
+    */
     
     return 0;
 }
