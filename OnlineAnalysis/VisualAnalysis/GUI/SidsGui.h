@@ -64,14 +64,6 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <memory>
 
-#ifdef NANOMSG
-#include "FairMQTransportFactoryNN.h"
-#else
-#include "FairMQTransportFactoryZMQ.h"
-#endif
-
-#include "EsrSamplerTask.h"
-#include "EsrSidsSampler.h"
 #endif //__CINT__
 
 
@@ -190,10 +182,6 @@ protected:
             Double_t sigma = 4., Double_t threshold = 0.2, 
             Option_t* option = "");
 
-    /// MQ stuffs
-    void StartSampler();
-    bool ReadyToSend() const {return fReadyToSend;}
-    void SetSampler(bool active=false){fSampler=active;}
    
 private:
     int fDecayCounter;

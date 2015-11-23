@@ -76,7 +76,8 @@ Set(LIBRARY_NAME SidsVisualAna)
 
 If (Boost_FOUND)
   Set(DEPENDENCIES
-    Base ParBase FairTools MCStack FairMQ FairMQSampler boost_thread 
+    Base ParBase FairTools MCStack boost_thread pthread
+    ${FAIRMQ_DEPENDENCIES}
     boost_system boost_serialization boost_filesystem 
     Matrix Tree Hist RIO Cint Core
     Minuit RooFitCore RooFit RooStats Foam MathMore
@@ -89,7 +90,7 @@ If (Boost_FOUND)
   Set(Exe_Names
     RunTest
     EsrMQSamplerBoost
-    EsrMQFileSinkBoost
+    #EsrMQFileSinkBoost
     ShowFile
     ShowStatus
   )
@@ -97,7 +98,7 @@ If (Boost_FOUND)
   set(Exe_Source
     run/runtest.cxx
     run/runEsrSampler.cxx
-    run/runEsrFileSink.cxx
+    #run/runEsrFileSink.cxx
     run/runFileInfo.cxx
     run/runSummary.cxx
     )
